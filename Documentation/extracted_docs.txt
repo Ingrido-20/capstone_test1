@@ -6,52 +6,23 @@ Capstone Project Proposal
  for Predictive Maintenance KPC Pipeline Pump Infrastructure
 Team NULL_TERMINATORS
 1. Introduction
-Team NULL_TERMINATORS is a five-member team from the KPC Cohort, Inuka Fellowship, Power Learn Project. The team placed first in Hackathon 1, developing a revenue reconciliation pipeline that addressed billing and payment discrepancies in KPC's order-to-cash process. This capstone extends the same reconciliation methodology to a second operational problem within the pipeline network: unplanned pump failure.
+Team NULL_TERMINATORS is a five-member team from the KPC Cohort, Inuka Fellowship, Power Learn Project. 
+The team placed first in Hackathon 1, developing a revenue reconciliation pipeline that addressed billing and payment 
+discrepancies in KPC's order-to-cash process. 
+This capstone extends the same reconciliation methodology to a second operational problem within the pipeline network: 
+unplanned pump failure.
 
-
-
-Name
-
-
-Role
-
-
-Silas Kibet
-
-
-Data Engineering Lead — pipeline, synthetic data generation, ETL
-
-
-Brian Kioko
-
-
-Modelling and Machine Learning Lead — hypothesis testing, feature engineering, modelling
-
-
-Ingrid Miriam
-
-
-Dashboard and Visualisation Lead — dashboarding, stakeholder views
-
-
-Eugene Obunde
-
-
-Storytelling and ROI Lead — briefs, executive narrative, business case
-
-
-Lameck Mugo
-
-
-Quality Assurance and Documentation Lead — testing, UAT notes, deployment readiness
+Group members
+Silas Kibet - Data Engineering Lead — pipeline, synthetic data generation, ETL
+Brian Kioko - Modelling and Machine Learning Lead — hypothesis testing, feature engineering, modelling
+Ingrid Miriam - Dashboard and Visualisation Lead — dashboarding, stakeholder views
+Eugene Obunde - Storytelling and ROI Lead — briefs, executive narrative, business case
+Lameck Mugo - Quality Assurance and Documentation Lead — testing, UAT notes, deployment readiness
 
 1.1 Background and Motivation
 1.1.1 Leak Sensitivity Analysis and Revenue-at-Risk
 Neither KPC's operating pressure nor historical leak orifice sizes are publicly disclosed, so the figures below are modelled using the pipeline's own published specifications rather than KPC-internal data. Line 5 (Mombasa–Nairobi, commissioned 2018) is a 20-inch pipeline moving approximately 1,000,000 litres per hour, and was built without a leak-detection system at commissioning (Pipeline and Gas Journal, 2019). Applying the standard orifice-flow equation (Q = Cd·A·√(2ΔP/ρ)) at an industry-typical discharge pressure of 50 bar, a leak in the 5–50 mm diameter range produces the following loss rates:
 Volume lost
-
-
-
 Leak size
 
 
