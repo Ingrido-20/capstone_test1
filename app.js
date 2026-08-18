@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (viewName === 'ml' && rulChart) {
       rulChart.resize();
     } else if (viewName === '3d') {
-      initThreeJSPumpVisualizer();
+      setTimeout(initThreeJSPumpVisualizer, 50);
     }
   }
 
@@ -222,19 +222,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- TRUE 3D THREE.JS WEBGL PUMP RENDERER ---
   let threeScene, threeCamera, threeRenderer, threeControls;
-  let shaftMesh, impellerMesh, bearingMesh, sealMesh, motorMesh;
+  let shaftMesh, impellerMesh, bearingMesh, sealMesh;
   let interactive3DObjects = [];
   let is3DInitialized = false;
 
   function initThreeJSPumpVisualizer() {
     const container = document.getElementById('container3D');
-    if (!container || is3DInitialized) return;
+    if (!container) return;
 
-    const loadingText = document.getElementById('loading3DText');
-    if (loadingText) loadingText.style.display = 'none';
+    if (is3DInitialized) {
+      if (threeRenderer && threeCamera) {
+        const w = container.clientWidth || 600;
+        const h = container.clientHeight || 380;
+        threeCamera.aspect = w / h;
+        threeCamera.updateProjectionMatrix();
+        threeRenderer.setSize(w, h);
+      }
+      return;
+    }
 
     const width = container.clientWidth || 600;
     const height = container.clientHeight || 380;
+
+    if (width === 0) {
+      setTimeout(initThreeJSPumpVisualizer, 100);
+      return;
+    }
+
+    // Check THREE availability
+    if (typeof THREE === 'undefined') {
+      console.error('Three.js library is not loaded.');
+      return;
+    }
 
     // 1. Scene & Camera Setup
     threeScene = new THREE.Scene();
@@ -248,14 +267,15 @@ document.addEventListener('DOMContentLoaded', () => {
     threeRenderer.setSize(width, height);
     threeRenderer.setPixelRatio(window.devicePixelRatio);
     threeRenderer.shadowMap.enabled = true;
+    container.innerHTML = ''; // Clear loading text
     container.appendChild(threeRenderer.domElement);
 
     // 3. Orbit Controls
-    if (window.THREE && THREE.OrbitControls) {
+    if (THREE.OrbitControls) {
       threeControls = new THREE.OrbitControls(threeCamera, threeRenderer.domElement);
       threeControls.enableDamping = true;
       threeControls.dampingFactor = 0.05;
-      threeControls.maxPolarAngle = Math.PI / 2 + 0.1; // Don't flip under baseplate
+      threeControls.maxPolarAngle = Math.PI / 2 + 0.1;
     }
 
     // 4. Lighting
@@ -293,7 +313,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (hit.userData && hit.userData.partKey) {
           updateComponentDiagnosticsUI(hit.userData.partKey);
-          highlight3DPart(hit.userData.partKey);
         }
       }
     });
@@ -307,8 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Window Resize Handler
     window.addEventListener('resize', () => {
       if (threeRenderer && threeCamera && container) {
-        const w = container.clientWidth;
-        const h = container.clientHeight;
+        const w = container.clientWidth || 600;
+        const h = container.clientHeight || 380;
         threeCamera.aspect = w / h;
         threeCamera.updateProjectionMatrix();
         threeRenderer.setSize(w, h);
@@ -445,11 +464,6 @@ document.addEventListener('DOMContentLoaded', () => {
     impellerGroup.position.set(4.5, 0.4, 0);
     threeScene.add(impellerGroup);
     interactive3DObjects.push(impellerGroup, voluteMesh, impellerMesh);
-  }
-
-  function highlight3DPart(partKey) {
-    // Updates active selection highlight
-    console.log(`Highlighting 3D Part: ${partKey}`);
   }
 
   // --- SYNTHETIC FAULT INJECTOR BUTTONS ---
@@ -616,7 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalCancelBtn = document.getElementById('modalCancelBtn');
   const modalConfirmBtn = document.getElementById('modalConfirmBtn');
 
-  document.getElementById('btnGenerateWorkOrder').addEventListener('click', () => {
+  document.getElementById('btnGenerateWorkOrder')?.addEventListener('click', () => {
     const partInfo = partData[state.selectedPumpPart] || partData.bearing;
     modalBody.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -641,19 +655,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- ALARM SOUND & COMMAND FEED ---
   let audioCtx, osc;
 
-  document.getElementById('btnEmergencyTrip').addEventListener('click', () => {
+  document.getElementById('btnEmergencyTrip')?.addEventListener('click', () => {
     alert('🚨 EMERGENCY PUMP TRIP SIMULATED: PS7 Nakuru Pump 4 Isolated. Flow bypass initiated.');
     if (!state.audioMuted) {
       playEmergencyTone();
     }
   });
 
-  document.getElementById('btnTestPushAlert').addEventListener('click', () => {
+  document.getElementById('btnTestPushAlert')?.addEventListener('click', () => {
     addAlertFeedItem('CRITICAL PRECURSOR: Vibration Spike 5.1 mm/s on PS7 Pump 4', 'Just now');
   });
 
   function addAlertFeedItem(title, time) {
     const list = document.getElementById('alertFeedList');
+    if (!list) return;
     const item = document.createElement('div');
     item.className = 'alert-item';
     item.innerHTML = `
@@ -683,13 +698,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  document.getElementById('btnMuteAudio').addEventListener('click', () => {
+  document.getElementById('btnMuteAudio')?.addEventListener('click', () => {
     state.audioMuted = !state.audioMuted;
     document.getElementById('btnMuteAudio').innerHTML = state.audioMuted ? '<i data-lucide="volume-2"></i> Unmute Alarm Audio' : '<i data-lucide="volume-x"></i> Mute Alarm Audio';
     if (window.lucide) lucide.createIcons();
   });
 
-  document.getElementById('btnResetSystem').addEventListener('click', () => {
+  document.getElementById('btnResetSystem')?.addEventListener('click', () => {
     injectFaultMode('normal');
     alert('System baseline reset to Nominal Operating Conditions.');
   });

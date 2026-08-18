@@ -8,13 +8,13 @@
   <!-- CSS Design System -->
   <link rel="stylesheet" href="index.css">
   
-  <!-- Chart.js & Lucide Icons via CDN -->
+  <!-- Local Three.js & OrbitControls for Guaranteed 3D WebGL Rendering -->
+  <script src="three.min.js"></script>
+  <script src="OrbitControls.js"></script>
+
+  <!-- Chart.js & Lucide Icons -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- Three.js & OrbitControls for True 3D WebGL Component Visualization -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
@@ -376,8 +376,7 @@
             </div>
             
             <div id="container3D" style="width: 100%; height: 380px; background: radial-gradient(circle at center, #1E293B 0%, #0B1120 100%); border-radius: 12px; position: relative; overflow: hidden; cursor: grab;">
-              <!-- Three.js Canvas will be mounted here dynamically -->
-              <div id="loading3DText" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--text-muted); font-size: 0.9rem;">Initializing 3D WebGL Model...</div>
+              <!-- Three.js WebGL Canvas will render here -->
             </div>
           </div>
 
