@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlowGuard AI — KPC Pipeline Predictive Maintenance System</title>
+  
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="index.css">
+  
+  <!-- Chart.js & Lucide Icons via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-nav">
+    <div class="brand-container">
+      <div class="kpc-badge">KPC</div>
+      <div class="brand-title">
+        FlowGuard AI <span>| Predictive & Prescriptive Pipeline Health</span>
+      </div>
+    </div>
+    
+    <div class="header-controls">
+      <!-- Pipeline Company Scalability Switcher -->
+      <div class="selector-group">
+        <label for="companySelect">Pipeline Network:</label>
+        <select id="companySelect">
+          <option value="kpc" selected>Kenya Pipeline Co. (KPC Line 5)</option>
+          <option value="taps">Trans-Alaska Pipeline (TAPS)</option>
+          <option value="petrobras">Petrobras Santos Basin Offshore</option>
+          <option value="enbridge">Enbridge Mainline Network</option>
+        </select>
+      </div>
+
+      <!-- Fluid Type Selector -->
+      <div class="selector-group">
+        <label for="fluidSelect">Fluid Type:</label>
+        <select id="fluidSelect">
+          <option value="ago" selected>AGO (Automotive Gasoil / Diesel)</option>
+          <option value="pms">PMS (Premium Motor Spirit / Petrol)</option>
+          <option value="jet">Jet A-1 / Kerosene</option>
+          <option value="crude">Light Sweet Crude Oil</option>
+        </select>
+      </div>
+
+      <!-- Live SCADA Telemetry Stream Status -->
+      <div class="live-indicator">
+        <div class="pulse-dot"></div>
+        <span id="telemetryStatusText">SCADA TELEMETRY: LIVE (1,000,000 L/hr)</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Body -->
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation Rail -->
+    <nav class="nav-rail">
+      <div>
+        <div class="nav-section-title">Navigation Views</div>
+        
+        <div class="nav-item active" data-view="gis">
+          <div class="nav-icon"><i data-lucide="map"></i></div>
+          <span>1. GIS Network & Anomaly Map</span>
+        </div>
+
+        <div class="nav-item" data-view="scada">
+          <div class="nav-icon"><i data-lucide="activity"></i></div>
+          <span>2. Flowgard Residual & SCADA</span>
+        </div>
+
+        <div class="nav-item" data-view="3d">
+          <div class="nav-icon"><i data-lucide="box"></i></div>
+          <span>3. 3D Pump Component Inspector</span>
+        </div>
+
+        <div class="nav-item" data-view="ml">
+          <div class="nav-icon"><i data-lucide="cpu"></i></div>
+          <span>4. ML Predictions & SHAP AI</span>
+        </div>
+
+        <div class="nav-item" data-view="financial">
+          <div class="nav-icon"><i data-lucide="dollar-sign"></i></div>
+          <span>5. Revenue-at-Risk & ROI</span>
+        </div>
+
+        <div class="nav-item" data-view="alerts">
+          <div class="nav-icon"><i data-lucide="bell"></i></div>
+          <span>6. Live Command Control & Alerts</span>
+        </div>
+      </div>
+
+      <!-- Role-Based Perspective Switcher (HCI ISO 9241 Standard) -->
+      <div class="role-switcher-box">
+        <div class="role-title">HCI Stakeholder View</div>
+        <div class="role-btn-group">
+          <button class="role-btn active" data-role="operator">SCADA Op</button>
+          <button class="role-btn" data-role="engineer">Engineer</button>
+          <button class="role-btn" data-role="datascience">ML Lead</button>
+          <button class="role-btn" data-role="executive">Executive</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+      
+      <!-- ========================================== -->
+      <!-- VIEW 1: GIS NETWORK & SPATIOTEMPORAL MAP -->
+      <!-- ========================================== -->
+      <section id="view-gis" class="view-panel active">
+        <!-- KPI Summary Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">
+              Active Network Pumps <span><i data-lucide="server"></i></span>
+            </div>
+            <div class="kpi-value" id="kpiActivePumps">48 / 50</div>
+            <div class="kpi-subtext positive"><i data-lucide="check-circle"></i> 96% Operational Availability</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">
+              Network Throughput <span><i data-lucide="droplet"></i></span>
+            </div>
+            <div class="kpi-value" id="kpiThroughput">1,000,000 L/hr</div>
+            <div class="kpi-subtext positive"><i data-lucide="trending-up"></i> Nominal Velocity 2.4 m/s</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">
+              Overall Health Index <span><i data-lucide="shield-check"></i></span>
+            </div>
+            <div class="kpi-value" id="kpiHealthIndex">94.8%</div>
+            <div class="kpi-subtext warning"><i data-lucide="alert-triangle"></i> PS7 Nakuru Pump 4 Drift</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">
+              Revenue-at-Risk <span><i data-lucide="alert-octagon"></i></span>
+            </div>
+            <div class="kpi-value" id="kpiRevenueRisk">KES 0.00</div>
+            <div class="kpi-subtext positive"><i data-lucide="shield"></i> Leak Precursor Protected</div>
+          </div>
+        </div>
+
+        <div class="grid-2col">
+          <!-- Interactive GIS Map Canvas -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i data-lucide="map-pin"></i> Spatiotemporal Anomaly Pipeline Map</div>
+                <div class="card-subtitle">Line 5 Mombasa – Nairobi – Nakuru – Eldoret – Kisumu (1,342 km)</div>
+              </div>
+              <div class="btn-group">
+                <button class="btn" id="btnToggleWeather"><i data-lucide="cloud-rain"></i> Soil & Weather Layer</button>
+              </div>
+            </div>
+            
+            <div class="pump-visualizer-container" style="min-height: 380px; padding: 0;">
+              <svg id="gisSvgMap" width="100%" height="380" viewBox="0 0 900 380" style="background: #0B1120;">
+                <!-- Grid Lines -->
+                <defs>
+                  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+                  </pattern>
+                  <linearGradient id="pipeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#D9232D" />
+                    <stop offset="50%" stop-color="#F59E0B" />
+                    <stop offset="100%" stop-color="#008751" />
+                  </linearGradient>
+                </defs>
+                <rect width="900" height="380" fill="url(#grid)" />
+
+                <!-- Pipeline Path (Mombasa to Kisumu) -->
+                <path d="M 80,300 Q 220,280 350,220 T 520,160 T 700,120 T 820,90" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="12" stroke-linecap="round"/>
+                <!-- Fluid Motion Line -->
+                <path id="fluidFlowLine" d="M 80,300 Q 220,280 350,220 T 520,160 T 700,120 T 820,90" fill="none" stroke="url(#pipeGrad)" stroke-width="6" stroke-dasharray="15 10" stroke-linecap="round">
+                  <animate attributeName="stroke-dashoffset" from="100" to="0" dur="3s" repeatCount="indefinite" />
+                </path>
+
+                <!-- Weather Overlay (River Crossings / Heavy Rain Soil Erosion) -->
+                <g id="weatherOverlay" style="opacity: 0.8;">
+                  <path d="M 300,180 Q 350,240 400,320" fill="none" stroke="#3B82F6" stroke-width="3" stroke-dasharray="4 4" opacity="0.6"/>
+                  <text x="310" y="270" fill="#60A5FA" font-size="11" font-family="Inter">Thange River Crossing (High Soil Porosity)</text>
+                </g>
+
+                <!-- Station Nodes -->
+                <!-- PS1 Mombasa -->
+                <g class="map-node" data-station="PS1" transform="translate(80,300)">
+                  <circle r="14" fill="#1E293B" stroke="#008751" stroke-width="3"/>
+                  <circle r="6" fill="#008751"/>
+                  <text x="0" y="30" text-anchor="middle" fill="#F8FAFC" font-size="12" font-weight="600">PS1 Mombasa</text>
+                  <text x="0" y="44" text-anchor="middle" fill="#94A3B8" font-size="10">Terminal Depot</text>
+                </g>
+
+                <!-- PS3 Mtito Andei -->
+                <g class="map-node" data-station="PS3" transform="translate(260,250)">
+                  <circle r="14" fill="#1E293B" stroke="#008751" stroke-width="3"/>
+                  <circle r="6" fill="#008751"/>
+                  <text x="0" y="-22" text-anchor="middle" fill="#F8FAFC" font-size="12" font-weight="600">PS3 Mtito Andei</text>
+                </g>
+
+                <!-- PS5 Sultan Hamud -->
+                <g class="map-node" data-station="PS5" transform="translate(420,195)">
+                  <circle r="14" fill="#1E293B" stroke="#008751" stroke-width="3"/>
+                  <circle r="6" fill="#008751"/>
+                  <text x="0" y="30" text-anchor="middle" fill="#F8FAFC" font-size="12" font-weight="600">PS5 Sultan Hamud</text>
+                </g>
+
+                <!-- PS6 Nairobi -->
+                <g class="map-node" data-station="PS6" transform="translate(560,150)">
+                  <circle r="16" fill="#1E293B" stroke="#008751" stroke-width="3"/>
+                  <circle r="7" fill="#008751"/>
+                  <text x="0" y="-24" text-anchor="middle" fill="#F8FAFC" font-size="12" font-weight="700">PS6 Nairobi Terminal</text>
+                </g>
+
+                <!-- PS7 Nakuru (Anomalous Station) -->
+                <g class="map-node" data-station="PS7" transform="translate(700,120)">
+                  <circle r="16" fill="#1E293B" stroke="#D9232D" stroke-width="3"/>
+                  <circle r="8" fill="#D9232D">
+                    <animate attributeName="r" values="6;11;6" dur="1.2s" repeatCount="indefinite"/>
+                  </circle>
+                  <text x="0" y="30" text-anchor="middle" fill="#F8FAFC" font-size="12" font-weight="700">PS7 Nakuru</text>
+                  <text x="0" y="44" text-anchor="middle" fill="#D9232D" font-size="10" font-weight="600">⚠ PUMP 4 WEAR</text>
+                </g>
+
+                <!-- PS9 Kisumu -->
+                <g class="map-node" data-station="PS9" transform="translate(820,90)">
+                  <circle r="14" fill="#1E293B" stroke="#008751" stroke-width="3"/>
+                  <circle r="6" fill="#008751"/>
+                  <text x="0" y="-22" text-anchor="middle" fill="#F8FAFC" font-size="12" font-weight="600">PS9 Kisumu</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Selected Station Health & Details Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title" id="selectedStationTitle"><i data-lucide="info"></i> Station Inspector: PS7 Nakuru</div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Station Risk Score:</span>
+                <span class="status-dot red"></span>
+                <strong style="color: var(--kpc-red); font-size: 1.1rem;">HIGH RISK (78%)</strong>
+              </div>
+
+              <div style="background: var(--bg-surface); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 4px;">Primary Failure Precursor</div>
+                <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">Pump 4 Inboard Roller Bearing Thermal Stress</div>
+              </div>
+
+              <table class="scada-table">
+                <tr><td>Operating Pumps:</td><td><strong>3 / 4 Units Active</strong></td></tr>
+                <tr><td>Discharge Pressure:</td><td><strong>48.2 bar (Normal 50 bar)</strong></td></tr>
+                <tr><td>Vibration RMS:</td><td><strong style="color: var(--kpc-gold);">4.8 mm/s (Limit 4.5)</strong></td></tr>
+                <tr><td>Elevation Head:</td><td><strong>1,850 meters ASL</strong></td></tr>
+                <tr><td>Rainy Season Soil Exposure:</td><td><strong style="color: #60A5FA;">Moderate (18% Porosity)</strong></td></tr>
+              </table>
+
+              <button class="btn btn-primary" style="margin-top: 8px;" id="btnInspectPump4">
+                <i data-lucide="wrench"></i> Deep Diagnostics on Pump 4
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 2: FLOWGARD RESIDUAL & SCADA TELEMETRY -->
+      <!-- ========================================== -->
+      <section id="view-scada" class="view-panel">
+        <!-- Flowgard Reconciliation Engine Banner -->
+        <div class="flowgard-banner">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.1rem; color: white;">Flowgard Hydraulic Reconciliation Engine</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">Calculates pressure residual between SCADA measured pressure and physical hydraulic simulation to isolate pump degradation.</p>
+          </div>
+          <div class="flowgard-formula">
+            Pressure Residual = P<sub>actual</sub> − P<sub>simulated</sub>
+          </div>
+        </div>
+
+        <!-- Telemetry Simulator Injector Toolbar -->
+        <div style="display: flex; gap: 12px; margin-bottom: 20px; background: var(--bg-card); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color); align-items: center;">
+          <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);"><i data-lucide="sliders"></i> Synthetic Fault Injector:</span>
+          <button class="btn btn-success fault-btn active" data-fault="normal"><i data-lucide="check-circle"></i> Normal Flow Baseline</button>
+          <button class="btn fault-btn" data-fault="bearing"><i data-lucide="alert-triangle"></i> Bearing Friction Drift</button>
+          <button class="btn fault-btn" data-fault="cavitation"><i data-lucide="activity"></i> Impeller Cavitation Spike</button>
+          <button class="btn fault-btn" data-fault="leak"><i data-lucide="droplet"></i> Leak Precursor Loss</button>
+        </div>
+
+        <div class="grid-2col">
+          <!-- Flowgard Pressure Residual Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i data-lucide="trending-up"></i> Flowgard Health Deviation Index (HDI)</div>
+              <div class="card-subtitle">Real-Time Pressure Residual Trend (bar)</div>
+            </div>
+            <div class="chart-box">
+              <canvas id="flowgardChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Real-Time Telemetry Stream Gauge Cards -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i data-lucide="gauge"></i> SCADA Sensor Readings</div>
+              <div class="card-subtitle">PS7 Nakuru — Pump 4 Unit</div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span style="color: var(--text-muted);">Vibration Velocity (Inboard):</span>
+                  <strong id="valVibration" style="color: var(--kpc-gold);">4.82 mm/s</strong>
+                </div>
+                <div style="height: 8px; background: var(--bg-surface); border-radius: 4px; overflow: hidden;">
+                  <div id="barVibration" style="width: 78%; height: 100%; background: var(--kpc-gold); transition: width 0.4s;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span style="color: var(--text-muted);">Bearing Temperature:</span>
+                  <strong id="valTemperature" style="color: var(--kpc-red);">86.4 °C</strong>
+                </div>
+                <div style="height: 8px; background: var(--bg-surface); border-radius: 4px; overflow: hidden;">
+                  <div id="barTemperature" style="width: 86%; height: 100%; background: var(--kpc-red); transition: width 0.4s;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span style="color: var(--text-muted);">Discharge Pressure:</span>
+                  <strong id="valPressure">48.20 bar</strong>
+                </div>
+                <div style="height: 8px; background: var(--bg-surface); border-radius: 4px; overflow: hidden;">
+                  <div id="barPressure" style="width: 65%; height: 100%; background: var(--kpc-green-light); transition: width 0.4s;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span style="color: var(--text-muted);">Motor Current Draw:</span>
+                  <strong id="valCurrent">312.5 Amps</strong>
+                </div>
+                <div style="height: 8px; background: var(--bg-surface); border-radius: 4px; overflow: hidden;">
+                  <div id="barCurrent" style="width: 70%; height: 100%; background: var(--kpc-green-light); transition: width 0.4s;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 3: 3D PUMP COMPONENT INSPECTOR -->
+      <!-- ========================================== -->
+      <section id="view-3d" class="view-panel">
+        <div class="grid-2col">
+          <!-- Interactive SVG 3D Pump Model -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i data-lucide="box"></i> Interactive 3D Centrifugal Pump Breakdown</div>
+              <div class="card-subtitle">Click component to inspect real-time degradation & SHAP attribution</div>
+            </div>
+            
+            <div class="pump-visualizer-container">
+              <svg id="pump3dSvg" width="100%" height="340" viewBox="0 0 700 340">
+                <!-- Pump Base Frame -->
+                <rect x="80" y="260" width="540" height="30" rx="6" fill="#1E293B" stroke="#334155" stroke-width="2"/>
+                <text x="350" y="280" text-anchor="middle" fill="#64748B" font-size="11" font-family="Inter">PS7 Nakuru — Booster Pump Assembly Frame #04</text>
+
+                <!-- Electric Motor Stator Housing -->
+                <g class="pump-part" data-part="motor">
+                  <rect x="100" y="100" width="180" height="150" rx="12" fill="#334155" stroke="#475569" stroke-width="3"/>
+                  <!-- Cooling Fins -->
+                  <path d="M 120,100 V 250 M 140,100 V 250 M 160,100 V 250 M 180,100 V 250 M 200,100 V 250 M 220,100 V 250 M 240,100 V 250" stroke="#1E293B" stroke-width="3"/>
+                  <text x="190" y="180" text-anchor="middle" fill="#F8FAFC" font-size="13" font-weight="700">Electric Motor</text>
+                  <text x="190" y="196" text-anchor="middle" fill="#10B981" font-size="10" font-weight="600">STATE: NOMINAL</text>
+                </g>
+
+                <!-- Drive Shaft -->
+                <rect x="280" y="160" width="100" height="30" fill="#64748B" stroke="#94A3B8" stroke-width="2"/>
+
+                <!-- Deep Groove Roller Bearings (High Risk Component) -->
+                <g class="pump-part selected" data-part="bearing">
+                  <rect x="370" y="130" width="60" height="90" rx="8" fill="rgba(217, 35, 45, 0.25)" stroke="#D9232D" stroke-width="3"/>
+                  <circle cx="400" cy="150" r="8" fill="#D9232D"/>
+                  <circle cx="400" cy="200" r="8" fill="#D9232D"/>
+                  <text x="400" y="118" text-anchor="middle" fill="#D9232D" font-size="11" font-weight="700">Inboard Bearing</text>
+                  <text x="400" y="238" text-anchor="middle" fill="#D9232D" font-size="10" font-weight="600">CRITICAL WEAR</text>
+                </g>
+
+                <!-- Mechanical Face Seal -->
+                <g class="pump-part" data-part="seal">
+                  <rect x="440" y="140" width="40" height="70" rx="4" fill="rgba(245, 158, 11, 0.2)" stroke="#F59E0B" stroke-width="2"/>
+                  <text x="460" y="130" text-anchor="middle" fill="#F59E0B" font-size="10" font-weight="600">Mech Seal</text>
+                </g>
+
+                <!-- Pump Volute Casing & Closed Impeller -->
+                <g class="pump-part" data-part="impeller">
+                  <path d="M 490,100 C 580,100 620,140 620,175 C 620,210 580,250 490,250 Z" fill="#1E293B" stroke="#008751" stroke-width="3"/>
+                  <!-- Impeller Blades -->
+                  <circle cx="545" cy="175" r="30" fill="none" stroke="#008751" stroke-width="3" stroke-dasharray="8 6"/>
+                  <text x="545" y="180" text-anchor="middle" fill="#F8FAFC" font-size="12" font-weight="700">Impeller</text>
+                  <text x="545" y="194" text-anchor="middle" fill="#008751" font-size="10" font-weight="600">NOMINAL</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Component Inspection Diagnostics Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title" id="partDetailTitle"><i data-lucide="cpu"></i> Component Details: Roller Bearing #1</div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="background: rgba(217,35,45,0.15); border: 1px solid var(--kpc-red); padding: 12px; border-radius: 8px;">
+                <div style="color: var(--kpc-red); font-weight: 700; font-size: 0.9rem;">Diagnostic Status: Impending Bearing Outer-Race Fault</div>
+                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">High thermal rise (86.4 °C) combined with 4.82 mm/s vibration velocity signature at 120 Hz BPFO.</div>
+              </div>
+
+              <div class="shap-bar-container">
+                <div style="font-size: 0.8rem; color: var(--text-dim); font-weight: 600;">SHAP Feature Attribution Weight:</div>
+                <div class="shap-item">
+                  <span class="shap-name">Bearing Temp Drift</span>
+                  <div class="shap-bar-bg"><div class="shap-bar-fill positive" style="width: 48%;"></div></div>
+                  <span class="shap-val">+0.48</span>
+                </div>
+                <div class="shap-item">
+                  <span class="shap-name">Vibration RMS (120Hz)</span>
+                  <div class="shap-bar-bg"><div class="shap-bar-fill positive" style="width: 32%;"></div></div>
+                  <span class="shap-val">+0.32</span>
+                </div>
+                <div class="shap-item">
+                  <span class="shap-name">Flowgard Pressure Res.</span>
+                  <div class="shap-bar-bg"><div class="shap-bar-fill positive" style="width: 14%;"></div></div>
+                  <span class="shap-val">+0.14</span>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" id="btnGenerateWorkOrder"><i data-lucide="clipboard"></i> Dispatch Prescriptive Maintenance</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 4: ML PREDICTIONS, RUL & SHAP AI -->
+      <!-- ========================================== -->
+      <section id="view-ml" class="view-panel">
+        <div class="grid-2col">
+          <!-- RUL Monte Carlo Dropout Regression Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i data-lucide="clock"></i> Remaining Useful Life (RUL) Confidence Bounds</div>
+              <div class="card-subtitle">Monte Carlo Dropout 95% Confidence Interval (Target MAE: 105.9 hrs)</div>
+            </div>
+            <div class="chart-box">
+              <canvas id="rulChart"></canvas>
+            </div>
+          </div>
+
+          <!-- ML Model Performance & RUL Estimate Box -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i data-lucide="target"></i> Model Classification Output</div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div style="text-align: center; background: var(--bg-surface); padding: 16px; border-radius: 10px; border: 1px solid var(--border-color);">
+                <div style="font-size: 0.8rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase;">7-Day Failure Risk Probability</div>
+                <div style="font-family: var(--font-heading); font-size: 2.6rem; font-weight: 800; color: var(--kpc-red); margin: 4px 0;">94.2%</div>
+                <div style="font-size: 0.82rem; color: var(--kpc-gold); font-weight: 600;">High Probability Failure Alert Triggered</div>
+              </div>
+
+              <div style="background: var(--bg-surface); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+                <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 4px;">Predicted Remaining Useful Life (RUL)</div>
+                <div style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 700; color: var(--text-main);">
+                  142.5 Hours <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 400;">[± 18.2 hrs]</span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--kpc-green-light); margin-top: 4px;">Service Window: 5.9 Days Remaining</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SHAP Waterfall & Drivers -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="layers"></i> SHAP Explainable AI — Global Feature Driver Waterfall</div>
+            <div class="card-subtitle">Identifies specific physical sensors driving the predictive maintenance decision</div>
+          </div>
+
+          <div class="shap-bar-container" style="gap: 16px;">
+            <div class="shap-item">
+              <span class="shap-name">Bearing Temp Drift (°C)</span>
+              <div class="shap-bar-bg"><div class="shap-bar-fill positive" style="width: 82%;"></div></div>
+              <span class="shap-val" style="color: var(--kpc-red);">+0.42 SHAP</span>
+            </div>
+
+            <div class="shap-item">
+              <span class="shap-name">Flowgard Pressure Residual (bar)</span>
+              <div class="shap-bar-bg"><div class="shap-bar-fill positive" style="width: 64%;"></div></div>
+              <span class="shap-val" style="color: var(--kpc-gold);">+0.28 SHAP</span>
+            </div>
+
+            <div class="shap-item">
+              <span class="shap-name">Inboard Vibration RMS (mm/s)</span>
+              <div class="shap-bar-bg"><div class="shap-bar-fill positive" style="width: 50%;"></div></div>
+              <span class="shap-val" style="color: var(--kpc-gold);">+0.21 SHAP</span>
+            </div>
+
+            <div class="shap-item">
+              <span class="shap-name">Motor Current Draw (Amps)</span>
+              <div class="shap-bar-bg"><div class="shap-bar-fill positive" style="width: 30%;"></div></div>
+              <span class="shap-val" style="color: var(--text-muted);">+0.12 SHAP</span>
+            </div>
+
+            <div class="shap-item">
+              <span class="shap-name">Ambient Temp / Weather Index</span>
+              <div class="shap-bar-bg"><div class="shap-bar-fill negative" style="width: 15%;"></div></div>
+              <span class="shap-val" style="color: var(--kpc-green-light);">-0.05 SHAP</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 5: REVENUE-AT-RISK & ROI CALCULATOR -->
+      <!-- ========================================== -->
+      <section id="view-financial" class="view-panel">
+        <div class="grid-2col">
+          <!-- Orifice Leak Loss Calculator -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i data-lucide="calculator"></i> Standard Orifice Leak Sensitivity Calculator</div>
+              <div class="card-subtitle">Q = C<sub>d</sub> · A · √(2ΔP / ρ) at 50 bar operating pressure</div>
+            </div>
+
+            <table class="scada-table">
+              <thead>
+                <tr>
+                  <th>Orifice Size</th>
+                  <th>Loss Rate (L/hr)</th>
+                  <th>Hourly Loss (KES)</th>
+                  <th>Hourly Loss (USD)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>5 mm (Hairline Crack)</strong></td>
+                  <td>4,627 L/hr</td>
+                  <td><strong style="color: var(--kpc-gold);">KES 14,700,000 / hr</strong></td>
+                  <td>$113,000 / hr</td>
+                </tr>
+                <tr style="background: rgba(217,35,45,0.08);">
+                  <td><strong>25 mm (Puncture)</strong></td>
+                  <td>115,687 L/hr</td>
+                  <td><strong style="color: var(--kpc-red);">KES 367,800,000 / hr</strong></td>
+                  <td>$2,829,000 / hr</td>
+                </tr>
+                <tr style="background: rgba(217,35,45,0.15);">
+                  <td><strong>50 mm (Rupture)</strong></td>
+                  <td>462,747 L/hr</td>
+                  <td><strong style="color: var(--kpc-red);">KES 1,471,500,000 / hr</strong></td>
+                  <td>$11,319,000 / hr</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ROI & Asymmetry Matrix -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i data-lucide="shield-alert"></i> ROI Cost Asymmetry Model</div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="background: rgba(0,135,81,0.15); border: 1px solid var(--kpc-green); padding: 14px; border-radius: 8px;">
+                <div style="font-size: 0.8rem; color: var(--kpc-green-light); font-weight: 600;">Preventive Condition-Based Maintenance:</div>
+                <div style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: white;">KES 1,000 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">(Component Bearing Replacement)</span></div>
+              </div>
+
+              <div style="background: rgba(217,35,45,0.15); border: 1px solid var(--kpc-red); padding: 14px; border-radius: 8px;">
+                <div style="font-size: 0.8rem; color: var(--kpc-red); font-weight: 600;">Unplanned Failure & Spill Incident (Thange/Kiboko Baseline):</div>
+                <div style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: white;">KES 103,000,000 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">(Direct Repair & Remediation)</span></div>
+                <div style="font-size: 0.78rem; color: var(--kpc-red); margin-top: 4px;">+ KES 25 Billion Potential Class Action Liability Exposure</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 6: LIVE ALERT CONTROL & COMMAND CENTER -->
+      <!-- ========================================== -->
+      <section id="view-alerts" class="view-panel">
+        <div class="grid-2col">
+          <!-- Real-Time Alert Stream -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i data-lucide="bell"></i> System Alert & Precursor Notification Feed</div>
+              <button class="btn btn-primary" id="btnTestPushAlert"><i data-lucide="send"></i> Trigger Test Push Alert</button>
+            </div>
+            
+            <div class="alert-feed" id="alertFeedList">
+              <div class="alert-item">
+                <div>
+                  <div class="alert-title">CRITICAL: PS7 Nakuru Pump 4 Bearing Degradation</div>
+                  <div class="alert-desc">Inboard bearing temperature reached 86.4 °C. RUL estimated at 142.5 hours. Prescriptive work order generated.</div>
+                </div>
+                <div class="alert-time">22:14:02</div>
+              </div>
+
+              <div class="alert-item warning">
+                <div>
+                  <div class="alert-title">WARNING: Line 5 Thange River Soil Erosion Index Elevated</div>
+                  <div class="alert-desc">Heavy rain activity detected. Ground movement risk score raised to 18%.</div>
+                </div>
+                <div class="alert-time">21:45:10</div>
+              </div>
+
+              <div class="alert-item info">
+                <div>
+                  <div class="alert-title">INFO: SCADA Flowgard Reconciliation Engine Calibrated</div>
+                  <div class="alert-desc">Pressure residual baseline synchronized across all 10 booster stations.</div>
+                </div>
+                <div class="alert-time">20:00:00</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Emergency Command & Isolation Controls -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title" style="color: var(--kpc-red);"><i data-lucide="power"></i> Emergency Command Isolation</div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <p style="font-size: 0.85rem; color: var(--text-muted);">In the event of a critical health deviation or leak precursor detection, operators can initiate an automated station trip & hydraulic bypass.</p>
+
+              <button class="btn btn-primary" style="padding: 16px; font-size: 1rem;" id="btnEmergencyTrip">
+                <i data-lucide="alert-triangle"></i> SIMULATE EMERGENCY PUMP TRIP (PS7)
+              </button>
+
+              <div style="display: flex; gap: 10px;">
+                <button class="btn" id="btnMuteAudio" style="flex: 1;"><i data-lucide="volume-x"></i> Mute Alarm Audio</button>
+                <button class="btn btn-success" id="btnResetSystem" style="flex: 1;"><i data-lucide="refresh-cw"></i> Reset Normal Baseline</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Modal Popup for Work Orders / Diagnostics -->
+  <div class="modal-overlay" id="diagnosticModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle" style="font-family: var(--font-heading); color: white;">Prescriptive Work Order #WO-8921</h3>
+        <button class="modal-close" id="modalCloseBtn">&times;</button>
+      </div>
+      <div id="modalBody" style="font-size: 0.9rem; color: var(--text-muted);">
+        <!-- Modal content loaded dynamically -->
+      </div>
+      <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn" id="modalCancelBtn">Close</button>
+        <button class="btn btn-success" id="modalConfirmBtn"><i data-lucide="check"></i> Approve Work Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic JS -->
+  <script src="app.js"></script>
+</body>
+</html>

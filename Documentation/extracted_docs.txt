@@ -1,0 +1,1235 @@
+========================================
+FILE: Documentation/Capstone Research.docx
+========================================
+
+Capstone Project Proposal
+ for Predictive Maintenance KPC Pipeline Pump Infrastructure
+Team NULL_TERMINATORS
+1. Introduction
+Team NULL_TERMINATORS is a five-member team from the KPC Cohort, Inuka Fellowship, Power Learn Project. The team placed first in Hackathon 1, developing a revenue reconciliation pipeline that addressed billing and payment discrepancies in KPC's order-to-cash process. This capstone extends the same reconciliation methodology to a second operational problem within the pipeline network: unplanned pump failure.
+
+
+
+Name
+
+
+Role
+
+
+Silas Kibet
+
+
+Data Engineering Lead — pipeline, synthetic data generation, ETL
+
+
+Brian Kioko
+
+
+Modelling and Machine Learning Lead — hypothesis testing, feature engineering, modelling
+
+
+Ingrid Miriam
+
+
+Dashboard and Visualisation Lead — dashboarding, stakeholder views
+
+
+Eugene Obunde
+
+
+Storytelling and ROI Lead — briefs, executive narrative, business case
+
+
+Lameck Mugo
+
+
+Quality Assurance and Documentation Lead — testing, UAT notes, deployment readiness
+
+1.1 Background and Motivation
+1.1.1 Leak Sensitivity Analysis and Revenue-at-Risk
+Neither KPC's operating pressure nor historical leak orifice sizes are publicly disclosed, so the figures below are modelled using the pipeline's own published specifications rather than KPC-internal data. Line 5 (Mombasa–Nairobi, commissioned 2018) is a 20-inch pipeline moving approximately 1,000,000 litres per hour, and was built without a leak-detection system at commissioning (Pipeline and Gas Journal, 2019). Applying the standard orifice-flow equation (Q = Cd·A·√(2ΔP/ρ)) at an industry-typical discharge pressure of 50 bar, a leak in the 5–50 mm diameter range produces the following loss rates:
+Volume lost
+
+
+
+Leak size
+
+
+Diesel (AGO)
+
+
+Petrol (PMS)
+
+
+Kerosene / Jet A-1
+
+
+5 mm (hairline crack)
+
+
+4,627 L/hr
+
+
+4,897 L/hr
+
+
+4,742 L/hr
+
+
+25 mm (puncture)
+
+
+115,687 L/hr
+
+
+122,431 L/hr
+
+
+118,544 L/hr
+
+
+50 mm (rupture)
+
+
+462,747 L/hr
+
+
+489,726 L/hr
+
+
+474,175 L/hr
+
+Revenue exposure (at current landed product cost, ~KES 115–133/litre, derived from EPRA's June 2026 import cost data; Energy and Petroleum Regulatory Authority [EPRA], 2026)
+
+
+
+Leak size
+
+
+Diesel (AGO)
+
+
+Petrol (PMS)
+
+
+Kerosene / Jet A-1
+
+
+5 mm
+
+
+KES 589,000/hr
+
+
+KES 561,000/hr
+
+
+KES 630,000/hr
+
+
+25 mm
+
+
+KES 14.7M/hr
+
+
+KES 14.0M/hr
+
+
+KES 15.8M/hr
+
+
+50 mm
+
+
+KES 58.9M/hr
+
+
+KES 56.2M/hr
+
+
+KES 63.0M/hr
+
+A small, undetected 5 mm leak running for just 24 hours already represents KES 11–15 million in lost product value — and a few days at this scale is sufficient to reach the order of magnitude of KPC's own documented Thange (400,000 L) and Kiboko (551,000 L, ~KES 63 million) incidents (Breaking Kenya News, 2020; see also Section 1.2 of this proposal). This model reproduces the Kiboko figure closely: the incident's disclosed value implies a per-litre cost of KES 114.3, within 1% of this analysis's independently modelled landed cost for petrol (KES 114.7/litre) — a useful validation of the approach.
+This reframes the value case: the system's daily risk assessment is not simply an efficiency gain, but a direct mitigant against loss rates that can reach tens of millions of shillings per hour once a leak passes undetected past the small-crack stage.
+1.1.2 Beyond Product Loss: Environmental and Catastrophic Exposure
+Soil contamination and remediation costs. Published remediation cost data puts bioremediation of petroleum-contaminated soil at USD 30–100 per m³ for standard treatment, rising to USD 100–500 per m³ for excavation/thermal treatment on more severe contamination (Bless & Den Services, 2026; U.S. Environmental Protection Agency, 2008). No public data exists on the exact soil volume contaminated per litre spilt at KPC sites — this depends on soil porosity, spill duration, and containment speed, none of which are disclosed. Modelling a bounded range (3× spill volume for rapid containment, up to 15× for a prolonged, spreading leak — consistent with the ~18 km of watercourse affected downstream in the Kiboko incident; Pipeline and Gas Journal, 2019) gives:
+
+
+
+Leak scenario
+
+
+Volume spilled
+
+
+Soil remediation cost (range)
+
+
+5 mm crack, undetected 1 day
+
+
+111,000 L
+
+
+KES 1.3M – 108M
+
+
+5 mm crack, undetected 3 days
+
+
+333,000 L
+
+
+KES 3.9M – 323M
+
+
+5 mm crack, undetected 7 days
+
+
+777,000 L
+
+
+KES 9.0M – 754M
+
+
+25 mm puncture, undetected 1 day
+
+
+2.78M L
+
+
+KES 32.3M – 2.69B
+
+This wide range reflects a genuine data gap: KPC has not disclosed actual remediation spend for Thange or Kiboko. This is itself grounds for requesting real cost data as part of Section 8's KPC Ask.
+Fire and life-safety cost — the Sinai precedent. The 2011 Mukuru-Sinai pipeline fire is the clearest documented case linking an undetected leak to catastrophic loss of life. A valve/gasket failure released fuel into storm drains; as residents collected the leaking fuel, it ignited (Wikipedia contributors, 2026a):
+
+
+
+Metric
+
+
+Figure
+
+
+Deaths
+
+
+~100–120 (lawsuit cited 109)
+
+
+Injured
+
+
+100+ hospitalised, many with severe burns
+
+
+KPC's own direct disclosed cost
+
+
+KES 103 million+ (fuel value, transport, environmental reinstatement, lost business, firefighting foam, labour, media) (Nation, 2020)
+
+
+Root cause
+
+
+A single faulty gasket, valued at under KES 1,000, not replaced in time (Nation, 2020)
+
+
+Civil claim filed by victims
+
+
+KES 25 billion class-action suit against KPC (Business & Human Rights Resource Centre, n.d.)
+
+
+Outcome
+
+
+Claim dismissed by the High Court in 2017 for 102 of the survivor-claimants; litigation on other claims continued for years
+
+Two implications for the business case:
+The asymmetry. A KES 1,000 component failure produced a documented KES 103 million direct cost to KPC alone — before counting the KES 25 billion claim exposure. This is a direct argument for condition-based monitoring: the marginal cost of catching degradation early is negligible against the tail risk of missing it.
+Compensation is not a substitute for prevention. The Sinai dismissal shows that even a catastrophic, well-documented incident does not reliably convert into victim compensation under Kenyan law — reinforcing that avoiding the incident is the only reliable risk control.
+(Sector context, not a pipeline incident: the 2009 Molo fuel tanker fire killed at least 133 people (Wikipedia contributors, 2026b) — Kenya's fuel transport sector has a documented history of catastrophic fire risk when containment fails, beyond KPC's pipeline network alone.)
+Synthesis: the Sinai incident demonstrates that undetected mechanical failure risk is not bounded by product value alone — it extends to environmental liability and, in the worst case, life-safety exposure at a scale several orders of magnitude larger than routine maintenance cost.
+1.2 The Problem
+KPC operates approximately 1,342 kilometres of pipeline connecting Mombasa, Nairobi, Nakuru, Eldoret, and Kisumu, with a combined storage and handling capacity of approximately 14 billion litres annually. Unplanned pump failures at booster and depot stations result in throughput stoppages, delayed deliveries to Oil Marketing Companies, emergency repair costs, and safety-critical pressure excursions.
+As established in the preceding section, this risk is not confined to product loss alone — it extends to environmental liability, catastrophic safety incidents, and legal exposure that can dwarf the value of the fuel itself. Documented incidents illustrate the operational risk this presents. An estimated 400,000 litres of product were lost at the Thange River in 2015, and 551,000 litres at Kiboko in 2018, valued at approximately KES 63 million (Breaking Kenya News, 2020). These incidents indicate that undetected mechanical degradation carries measurable safety and financial consequences.
+Current maintenance practice is time-based and follows a fixed interval. This approach does not account for the actual condition of individual pumps, resulting in unnecessary servicing of functioning equipment and insufficient attention to units approaching failure. The common failure point across every incident cited above is the same: degradation that develops between scheduled inspections goes undetected until it manifests as a leak, a stoppage, or worse. It is this gap — between fixed-interval servicing and the actual, real-time condition of the equipment — that this capstone addresses.
+1.3 Project Objectives
+Main Objective
+To investigate the root causes of unplanned pump failure within KPC's pipeline infrastructure and design a prescriptive and predictive analytics system that shifts maintenance decision-making from a fixed-interval schedule to continuous, condition-based risk assessment.
+Specific Objectives
+1. To identify and characterise the root causes of pump failure by investigating the relationship between sensor-derived operating conditions — vibration, temperature, pressure, and motor current — and historical or synthetic failure events, establishing which features carry genuine predictive signals.
+2. To develop a predictive classification model that evaluates each pump's failure risk within a defined forward-looking window (e.g. seven days), using rolling-window sensor features, so that at-risk units can be flagged before failure occurs rather than after.
+3. To develop a prescriptive regression model that estimates Remaining Useful Life (RUL), in hours, for pumps identified as high-risk, giving maintenance planners a defined and actionable service window rather than a binary alert.
+4. To design a maintenance prioritisation framework that translates model output into a ranked, actionable schedule — directing technician time and spare-parts allocation toward the pumps that need it, rather than servicing functioning equipment on a fixed interval.
+5. To quantify the business case for adoption, expressing model performance in terms a non-technical stakeholder can act on: reduced emergency repair expenditure, reduced throughput-stoppage duration, avoided environmental and catastrophic risk exposure, and the cost of false alarms versus missed failures.
+6. To validate the system's performance against defined accuracy, sensitivity, false-alarm-rate, and RUL-error benchmarks (as achieved in the Week 6 laboratory exercise: 94.2% classification accuracy, 84.3% failure-detection sensitivity, 2.4% false-alarm rate, 105.9-hour RUL MAE), and to establish a path to recalibrating and validating the system against real KPC operating data.
+7. To design a dashboard and workflow that presents risk scores, RUL estimates, and prioritised maintenance actions to KPC's maintenance planners and technicians in a form that fits their existing scheduling practice, as outlined in the Implementation Rollout (Section 7).
+2. State of the Art
+2.1 From Reactive Maintenance to Predictive and Prescriptive Analytics
+Industrial maintenance has historically progressed through three paradigms: reactive (run-to-failure), preventive (fixed-interval), and, more recently, predictive/condition-based maintenance enabled by machine learning. Odu and Ako (2026), in a comprehensive review of machine learning applications in centrifugal pump diagnostics, note that traditional reactive and preventive strategies consistently fail to capture real-time equipment condition, leading to unexpected failures and reduced asset availability — the same limitation this proposal identifies in KPC's current fixed-interval practice. Their review surveys supervised, unsupervised, and hybrid ML techniques (Support Vector Machines, Random Forests, Artificial Neural Networks, Principal Component Analysis, and Long Short-Term Memory networks) applied specifically to centrifugal pump diagnostics, and finds that data-driven predictive maintenance consistently outperforms threshold-based rule systems in early fault detection and scheduling optimisation.
+2.2 Machine Learning for Pump Condition Monitoring and Fault Classification
+Several studies validate the specific sensor-driven classification approach this capstone proposes. Chen et al. (2022) developed a smart-sensor-based monitoring system for centrifugal pumps that combines edge computing with intelligent diagnosis to detect common failure modes — bearing wear, impeller imbalance, shaft misalignment, and cavitation — directly comparable to the mechanical degradation modes relevant to KPC's booster pumps.
+In the petroleum sector specifically, Abdalla et al. (2022) applied Principal Component Analysis for unsupervised dimensionality reduction followed by an XGBoost classifier to predict failures in Electrical Submersible Pumps (ESPs), a widely used artificial lift technology in oil production. Their pipelined PCA–XGBoost approach reduced the time required to dismantle and inspect pumping systems for failure analysis, directly paralleling this capstone's own use of engineered rolling-window features feeding a classification model.
+Most directly relevant, Alghtus et al. (2025a) built a short-horizon fault-forecasting framework for industrial centrifugal pumps using vibration, temperature, pressure, and electrical current signals — the same four sensor families this capstone's classification model is built on. Their methodology used a sliding-window approach to extract statistical features (mean, standard deviation, minimum, maximum, linear trend) and addressed class imbalance using the SMOTE algorithm before training Random Forest and XGBoost classifiers — a methodological pipeline this capstone's Week 6 laboratory exercise closely mirrors. Their finding that optimal lookback window length depends on the prediction horizon is a useful design consideration for tuning this project's own seven-day risk window.
+2.3 Remaining Useful Life (RUL) Estimation
+Where classification identifies that a pump is at risk, RUL estimation addresses how long until failure — the second half of this capstone's prescriptive layer. Wu et al. (2024), in a systematic survey of deep-learning-based RUL prediction, distinguish physics-based methods (which require detailed prior mechanical knowledge, often unavailable in practice) from data-driven methods that learn degradation patterns directly from condition-monitoring signals. Their survey confirms that data-driven RUL regression is now the dominant approach in industrial prognostics precisely because it avoids the need for a full physical failure model — the same rationale underlying this capstone's choice of a regression model over a physics-based degradation equation.
+2.4 Machine Learning for Pipeline Leak Detection
+Since KPC's operational risk extends beyond pump failure to pipeline leakage itself, this review also considers ML applications for leak detection. Oshingbesan (2022) applied a hierarchical regressor-classifier architecture — comparing gradient boosting, decision trees, random forests, SVM, and neural networks — to detect small leaks in natural gas pipelines using operational parameters (pressure, temperature, flow rate) rather than dedicated leak-detection hardware, demonstrating that leak signatures can be extracted from data KPC's SCADA systems likely already collect. Aljameel et al. (2022) similarly benchmarked five ML algorithms for oil and gas pipeline anomaly detection, finding SVM achieved 97.4% accuracy, while Ekong et al. (2024) achieved 97% accuracy using a CNN-based deep learning model integrated with IoT sensor data.
+2.5 Implemented Systems in Industry
+The preceding sections establish the academic foundation. This section turns to systems already deployed and operating in industry — evidence that this approach has moved from lab benchmarks to production use, including within contexts comparable to KPC's.
+Global oil & gas majors. Shell operates one of the most mature deployments of AI-driven predictive maintenance in the industry. Partnering with C3.ai and Microsoft Azure Machine Learning, Shell scaled its system to monitor over 10,000 pieces of equipment across refineries, offshore rigs, and pipelines worldwide, transforming maintenance from reactive/time-based to proactive and predictive (Millennial Partners, n.d.). In its North Sea and Gulf of Mexico operations, Shell's system monitors 4,000 data streams from rotating equipment and predicts failures an average of six weeks before occurrence, which the company credits with preventing over $100 million annually in deferred production and emergency maintenance costs (apidots, 2026). Enbridge, one of North America's largest pipeline operators, has deployed machine learning models specifically for pipeline integrity monitoring and leak detection — analysing real-time pressure, temperature, and acoustic sensor data to flag anomalies indicating corrosion, cracking, or leaks (Trilogy Energy Solutions, 2026), architecturally close to what this capstone proposes: the same sensor families, the same anomaly-vs-normal classification framing, applied to the same asset class. Equinor has deployed AI predictive maintenance across its Troll, Oseberg, and Åsgard platforms in the Norwegian North Sea, demonstrating this approach scales to high-throughput, safety-critical petroleum infrastructure comparable in scale to national pipeline networks (apidots, 2026).
+An African case study. Most directly relevant to KPC's context, Nwokonkwo et al. (2024) developed an Intelligent Model for Real-Time Pipeline Monitoring and Maintenance Prediction specifically for Nigeria's oil and gas sector — combining a Random Forest classifier for anomaly detection with a Prophet time-series model for maintenance forecasting, integrated with a SCADA server and an SMS alert system for field notification. Their system used the same four sensor families this capstone proposes (flow rate, temperature, pressure, and vibration) and achieved 93.48% classification accuracy, 93.75% precision, 96.77% recall, and a 95.24% F1-score — outperforming a comparable prior system built on distributed fibre-optic sensors (91.30% accuracy). The paper documents concrete deployment specifications — hardware requirements, distributed fibre-optic sensor specifications (spatial resolution down to 0.1–1 m, sub-second latency, cable runs up to 50 km per sensing unit), and SCADA integration — that this capstone's own Implementation Rollout (Section 7) can draw on directly. The study was conducted with support from the Production Monitoring Centre of Shell Petroleum Development Company (SPDC) in Port Harcourt, Nigeria, though it is worth noting precisely that the model was trained on public Kaggle datasets rather than SPDC's live operational data — it sits between a pure academic study and a fully deployed industry system, demonstrating strong industry engagement rather than confirmed production deployment. Its motivation section is striking in how closely it mirrors KPC's documented experience: it cites Nigerian pipeline losses of US$14 billion annually to bunkering and theft, and a single 2007 incident causing an estimated N10 billion loss to NNPC from vandalism and product loss — the same order-of-magnitude financial exposure this proposal has already quantified for KPC in Section 5 of the Business Value discussion, from a comparable developing-economy pipeline operator.
+African utility-sector precedent beyond oil and gas. Nigeria's Niger Delta Power Holding Company (NDPHC) offers a useful non-pipeline African precedent: the state-owned power generator has deployed AI-powered predictive maintenance on its gas-fired turbines, moving — in its CEO's words — "beyond preventive maintenance to predictive maintenance," using continuous sensor feeds and machine learning to flag deteriorating components ahead of scheduled service checks (Businessday NG, 2026). This confirms that state-owned African infrastructure operators, facing similar budget and legacy-infrastructure constraints to KPC, are already making this transition operationally, not just in pilot research.
+2.6 Research Gap and Positioning of This Capstone
+Two gaps emerge from this combined review of research and practice. First, at the academic level, most existing studies (Chen et al., 2022; Abdalla et al., 2022; Alghtus et al., 2025a) address pump fault classification and RUL estimation in isolation rather than as a combined workflow, and none were identified that integrate both specifically for petroleum pipeline booster/depot pump infrastructure in an East African or comparable developing-economy operating context. Second, at the implementation level, the industry systems reviewed above (Shell, Enbridge, Equinor) operate at a scale and budget unavailable to KPC, while the one closely comparable African system (Nwokonkwo et al., 2024) remains a research prototype validated on public datasets rather than live SCADA data from its host operator — meaning no fully deployed, production-grade equivalent of this capstone's proposed system yet exists for an African-operated liquid petroleum products pipeline specifically.
+This capstone's contribution is therefore to combine a classification layer (Section 2.2 precedent) with a regression-based RUL layer (Section 2.3 precedent) into a single prescriptive maintenance-prioritisation workflow, purpose-built and validated against KPC's own operating context and documented incident history — occupying the gap between academic proof-of-concept and the fully-scaled commercial deployments seen at Shell and Enbridge, while following the architectural precedent already validated for a comparable African oil pipeline operator.
+3. Proposed Solution: Data Foundation
+3.1 Sensor Parameters and Acquisition Strategy
+What Needs to Be Recorded
+Based on both the Week 6 laboratory exercise and the literature reviewed in Section 2, the classification and RUL models require four core sensor signal families, each capturing a distinct failure mode:
+
+
+
+Parameter
+
+
+Typical unit
+
+
+What it captures
+
+
+Failure modes it signals
+
+
+Vibration
+
+
+mm/s (velocity) or g (acceleration)
+
+
+Mechanical condition of rotating components
+
+
+Bearing wear, impeller imbalance, shaft misalignment, cavitation (Chen et al., 2022)
+
+
+Temperature
+
+
+°C
+
+
+Thermal stress on motor/bearings and fluid
+
+
+Overheating, bearing friction, seal degradation
+
+
+Pressure
+
+
+bar
+
+
+Hydraulic performance at inlet/outlet
+
+
+Blockages, seal failure, leaks, cavitation onset
+
+
+Motor current
+
+
+A (Amps)
+
+
+Electrical load on the motor
+
+
+Mechanical binding, impeller damage, dry-running
+
+Alghtus et al. (2025a, 2025b) — whose short-horizon fault-forecasting framework this capstone's methodology closely follows — monitored exactly these five signals (adding flow rate) at one-minute intervals on a real industrial centrifugal pump, a reasonable sampling-rate benchmark for this capstone's own data pipeline design.
+Where Sensors Sit
+Per-pump sensors: vibration and motor current, mounted directly on or near each pump unit — pump-specific and not inferable from station-level readings.
+Pipe-mounted sensors: pressure and temperature at the inlet and outlet of each pump (and, per the earlier leak-localisation discussion, at station-to-station segment boundaries) — this dual placement lets the model distinguish a pump problem (abnormal readings across only that unit) from a pipeline problem (abnormal readings propagating station-to-station).
+Getting Sensor Data for Development — Three Tracks
+Since KPC has not yet provided sensor access (this is explicitly part of the Section 8 Ask), development proceeds on a combination of public real-world data and synthetic data, with a clear path to swap in real KPC data once access is granted.
+Track 1 — Public, real-world pump sensor datasets.
+Martone et al. (2025) published a detailed, documented dataset from three industrial centrifugal pumps monitored via wireless IoT (WirelessHART) sensors at the Italian Aerospace Research Centre (CIRA) — capturing motor/pump vibration, temperature, outlet fluid pressure, and environmental conditions across eight days of real operation. Close to ideal as a structural template: real centrifugal pump hardware, the right sensor families, and a documented data-collection methodology worth mirroring for the eventual KPC deployment.
+The Kaggle "pump_sensor_data" dataset (nphantawee, 2018) provides 52 real sensors from a remote-area water pump system with a labelled machine status (NORMAL / BROKEN / RECOVERING) — useful for prototyping the classification model's pipeline (feature engineering, class-imbalance handling, evaluation metrics).
+A "Water Pump RUL" Kaggle dataset provides sensor readings with an explicit remaining-useful-life target in hours, useful for prototyping the regression model's pipeline before real KPC failure/RUL data exists.
+Track 2 — Synthetic data generation (the Week 6 approach, extended). Real, labelled failure events are rare in any operational dataset, which is exactly the class-imbalance problem this capstone's own Objective 6 benchmarks already anticipate (94.2% accuracy against a 2.4% false-alarm rate implies a heavily imbalanced label distribution). Alghtus et al. (2025b) address this directly: working with a real vertical centrifugal pump in a marine environment, genuine failure events were too rare to train on directly, so they injected synthetic fault signals using domain-specific rules — simulating critical alerts within physically plausible operating ranges — combined with a dual-threshold labelling scheme (fixed engineering limits plus adaptive 95th-percentile thresholds). This is methodologically identical to what Silas Kibet's synthetic data generation role for this capstone should formalise: start from plausible normal-operation baselines for KPC's pump types, then inject rule-based degradation trajectories (e.g., gradually rising vibration + temperature drift preceding a bearing failure) to generate the 7-day-window failure examples the classification model needs, and the corresponding hours-to-failure labels the RUL regression model needs.
+Track 3 — Real KPC data (the eventual target). Both tracks above are explicitly bridging measures. The Section 8 Ask already requests engineering contact and historical failure records; this should be extended to request read access to KPC's existing SCADA/historian data for at least one pump station, since KPC's booster stations almost certainly already log pressure, temperature, and flow even if vibration and current monitoring for predictive purposes are not yet instrumented. Getting even partial real data early would let the model be validated against real operating baselines well before a full sensor rollout, and would sharpen the synthetic degradation-injection rules in Track 2 to match KPC's actual equipment behaviour rather than generic literature assumptions.
+Feature Engineering Once Data Is In Hand
+Regardless of source, the modelling approach in Section 4.1 (rolling-window features feeding the classification and RUL models) requires each raw signal to be transformed into engineered features per window — consistent with Alghtus et al.'s (2025a) approach: mean, standard deviation, minimum, maximum, and linear trend computed over a sliding lookback window, with window length tuned against the prediction horizon (their finding that optimal lookback depends on horizon length is directly relevant to tuning this capstone's 7-day risk window).
+3.2 External Risk Factors: Weather and Regional Activity Data
+Sensor data alone only tells you about the pump's internal state. Two external factors also demonstrably affect pipe and pump health and are worth engineering into the model as exogenous features alongside the sensor-derived ones: weather and regional human activity near each station.
+Why Weather Matters
+Weather doesn't just correlate with pipeline failure — it drives several of the physical degradation mechanisms already discussed in Section 2:
+Soil moisture and corrosion. Moisture content is repeatedly identified as the dominant driver of external corrosion on buried steel pipe — it acts as the electrolyte medium that lets iron oxidise into rust, and rainfall directly increases it. A review of underground metal pipe corrosion factors confirms rainfall and soil moisture as leading corrosive drivers alongside soil pH and chemical composition.
+Temperature cycling. A large-scale study of water pipe failures (29,621 failure records over 30 years) found failure rates rose measurably on days above 10°C, attributing this to heat-driven soil shrinkage accelerating corrosion — a mechanism equally applicable to KPC's buried steel lines across Kenya's varied climate zones (arid stretches near Mtito Andei vs. humid coastal sections near Mombasa).
+Extreme weather and ground movement. PHMSA explicitly warns that heavier rainfall and higher temperatures increase soil saturation, erosion, and ground movement risk around buried pipeline facilities — directly relevant to sections of KPC's route that cross rivers (Thange, Kiboko) where prior incidents have already occurred.
+Practical weather API options for development:
+
+
+
+Source
+
+
+What it offers
+
+
+Notes
+
+
+Kenya Meteorological Department (meteo.go.ke)
+
+
+Official Kenyan station data, climate/rainfall records
+
+
+The authoritative source; worth adding to Section 8. Ask for direct data-sharing access, since it's a fellow government entity
+
+
+Open-Meteo
+
+
+Free, gap-free historical weather via ERA5/ERA5-Land reanalysis (from 1940) plus live forecast API, no API key required for non-commercial use
+
+
+Good default for development — covers all of Kenya's pump station coordinates at 0.1–0.25° resolution with no cost barrier
+
+
+NASA POWER
+
+
+Satellite-derived temperature, precipitation, humidity, solar radiation
+
+
+Useful cross-check/backup, especially for areas with sparse ground station coverage
+
+For each pump station's known coordinates, the pipeline would pull daily/hourly temperature, rainfall, and humidity, and derive features like cumulative rainfall over the trailing 30 days or count of freeze–thaw-equivalent temperature swings — mirroring the features climate-corrosion studies use to model degradation risk.
+Why Regional Activity Matters
+The second, distinct risk category is human activity near the pipeline route — commonly called third-party damage (TPD) in pipeline safety literature, and it is not a minor factor. A Bayesian network risk study analysing PHMSA incident data found third-party excavation was the single leading cause of pipeline incidents, at 26.3% of all recorded events — ahead of external corrosion (23.7%), material failure (16.8%), and internal corrosion (8.4%). A separate European pipeline incident dataset (EGIG, covering 1970–2013) similarly found external interference the top cause at 35% of incidents, arising from construction work, farming activity, and excavation near pipeline corridors.
+This isn't a hypothetical risk for KPC specifically — the Nigeria case study reviewed in Section 2.5 documented vandalism and illegal bunkering losses reaching US$14 billion annually in a comparable regional context, and KPC's own history includes fuel theft incidents at Mavoko and Kibos. Construction activity, informal settlement growth along the right-of-way (as in the Sinai precedent from Section 1.1.2), and land-use changes near a given station are all measurable proxies for this risk category.
+Operationalising regional risk as a feature. Rather than a real-time sensor feed, this is better modelled as a slowly-updating station-level risk score, combining:
+Population density/settlement growth near each station's right-of-way (from public sources like WorldPop or Kenya census data)
+Known incident history per station or segment (from KPC's own records, once available per Section 8)
+Construction/land-use signals — even a manually maintained log of nearby development activity would materially improve on nothing, and could later be automated via satellite imagery change-detection if project scope extends that far
+This score feeds into the classification model as a static or slowly-varying feature per station — alongside the fast-moving sensor readings — so the model can, for instance, weight an ambiguous pressure anomaly more heavily as a potential leak (rather than a sensor glitch) at a station with a high third-party activity score.
+3.3 Complete Feature Schema
+Combining both sources, the model's full feature set spans three update tiers:
+
+
+
+Category
+
+
+Signals
+
+
+Update frequency
+
+
+Source
+
+
+Pump sensors
+
+
+Vibration, temperature, pressure, motor current
+
+
+Real-time (~1 min)
+
+
+Per-pump/per-pipe sensors → Section 3.1, Tracks 1–3
+
+
+Weather
+
+
+Temperature, rainfall, humidity
+
+
+Daily/hourly
+
+
+Open-Meteo API (dev), KMD (production target)
+
+
+Regional activity risk
+
+
+Population density, incident history, land-use/construction signals
+
+
+Weekly/monthly or event-driven
+
+
+Manual log + public population/land-use data (dev), KPC incident records (production target)
+
+All three feed the same rolling-window feature engineering pipeline described in Section 3.1: fast-moving sensor features update the classification model's short-horizon risk score, while weather and regional-risk features act as slower-moving context that adjusts each station's baseline risk level rather than triggering alerts on their own.
+4. Proposed Solution Approaches
+4.1 Solution Overview
+The team proposes a condition-based maintenance system that replaces fixed-interval servicing with continuous, data-driven risk assessment. The system operates as follows:
+A classification model evaluates each pump daily against a seven-day failure risk window, using rolling-window sensor features derived from vibration, temperature, pressure, and motor current readings.
+A regression model estimates Remaining Useful Life, in hours, for pumps identified as high-risk, providing maintenance planners with a defined service window.
+Maintenance scheduling is prioritised according to model output, directing technician time and spare-parts allocation toward pumps that require intervention.
+This methodology has been validated in the Week 6 laboratory exercise, achieving 94.2 per cent classification accuracy, 84.3 per cent failure-detection sensitivity, a 2.4 per cent false alarm rate, and a Remaining Useful Life prediction error of 105.9 hours (Mean Absolute Error), using a synthetic dataset of 24 pumps across four depots.
+Pulling together the data foundation (Section 3), the state of the art (Section 2), and the leak-localisation method already derived, four concrete solution approaches emerge — each addressing one of KPC's priority questions directly, and together forming one integrated system rather than four competing ones.
+4.2 Approach 1: Spatiotemporal Anomaly Mapping and Flagging
+Addresses: "mapping the data and flagging anomalies" + "checking time and region more prone to them"
+What it does: Turns raw sensor + weather + regional-risk data into a live risk map across all ten pump stations, flagging both individual anomalies and systemic patterns — which stations, seasons, or conditions produce the most flags.
+How it works:
+The classification model (Section 4.1) outputs a per-pump risk score every cycle. Rather than treating each flag in isolation, aggregate flags by station × time-of-year × weather condition to answer "why here, why now."
+Cross-tabulate flags against the weather features (Section 3.2) — e.g., does anomaly frequency spike during the long rains (March–May) at river-crossing stations like Thange and Kiboko? This directly tests whether the corrosion/ground-movement mechanisms from the literature (Section 3.2) show up in KPC's actual flag patterns.
+Cross-tabulate against the regional-risk score — do flags cluster at stations with higher population density or known incident history, consistent with the third-party-damage literature (26.3% of pipeline incidents per Section 3.2)?
+Output: A dashboard (per the Section 7 Implementation Rollout) with a station-level heat map — not just "Pump 4 at PS7 is at risk today" but "PS7 has 3× the anomaly rate of the network average during the rainy season, and warrants a standing seasonal inspection uplift, not just reactive alerts."
+Why it matters: This converts individual flags into an evidence base for where and when to concentrate the Phase 2 fleet-wide rollout (Section 6, Go-to-Market Strategy) — a stronger prioritisation argument than treating all ten stations identically.
+4.3 Approach 2: Leak Precursor Pattern Recognition
+Addresses: "checking leakage patterns and noting what happens before that"
+What it does: Instead of only flagging a leak once it's happened (via the mass-balance or NPW methods already derived), this approach works backwards from known/synthetic leak events to identify the sensor signature that precedes them — turning leak detection into leak prediction.
+How it works:
+For every labelled or synthetic leak event in the training data (Section 3.1, Track 2), extract the sensor window (pressure, vibration, flow) for the hours/days before the event, not just the event itself.
+Apply the same rolling-window feature engineering used for pump RUL (mean, trend, standard deviation — Section 3.1) to this pre-leak window, and look for consistent precursor signatures: e.g., a slow pressure drift below the adaptive 95th-percentile threshold (the dual-threshold method from Alghtus et al., 2025b) sustained over several hours, distinct from the sudden pressure drop the NPW method detects at the moment of rupture.
+Feature importance analysis (SHAP, as used by Odu & Ako, 2026, and the water pump interpretability study in Section 2) on this precursor window identifies which signal, how far in advance, is most predictive — directly informing what warning lead-time is realistically achievable.
+Output: An early-warning classifier distinct from the leak-detection method itself — flagging "conditions consistent with a developing leak" before the NPW/mass-balance methods would even trigger, since those only fire once a leak has actually started.
+Why it matters: This is the piece that most directly reduces the revenue and environmental exposure quantified in Section 1.1 — every hour of advance warning compounds against the KES 500,000+/hour loss rates already modelled.
+4.4 Approach 3: RUL-Based Lifecycle Maintenance Scheduling
+Addresses: "looking at the equipment lifecycle and other factors to ensure maintenance is done in time"
+What it does: This is the RUL regression model from Objective 3, extended to incorporate equipment lifecycle metadata beyond real-time sensor readings — pump age, manufacturer service life, repair history, and duty cycle — so the RUL estimate reflects both current condition and cumulative wear.
+How it works:
+Beyond the rolling-window sensor features, add static/slow-changing features: pump installation date, cumulative operating hours, count of prior interventions, and manufacturer-rated design life.
+This follows the same logic Wu et al. (2024) identify as the advantage of data-driven RUL over pure physics-based methods (Section 2.3) — but enriching the purely sensor-driven signal with the lifecycle context a physics-based model would otherwise require.
+Output feeds a prioritised maintenance calendar: not just "this pump is at risk," but "this pump is at risk and is approaching its rated design life and has had two prior bearing interventions" — a materially different urgency signal than risk score alone.
+Output: The maintenance-prioritisation dashboard described in Section 7 (Implementation Rollout), but with RUL estimates weighted by lifecycle context rather than sensor data in isolation — directly serving Objective 4 (maintenance prioritisation framework).
+4.5 Approach 4: Integrated Pump–Pipe Health Model (the combining layer)
+Addresses: "looking at a combined pump and pipe maintenance"
+What it does: Approaches 1–3 largely treat pump health and pipe integrity as separate problems (as the literature in Section 2.4 -- 2.5 mostly does too — pump PdM and pipeline leak detection are usually published as distinct research streams). This approach argues they shouldn't be separate in KPC's system, because they share root causes and sensor infrastructure.
+How it works:
+A pump degrading (rising vibration, erratic current draw) changes the pressure and flow profile downstream — which is exactly the signal the pipeline leak-detection methods (mass balance, NPW) rely on. An undiagnosed pump fault can produce a pressure signature that either masks a genuine small leak (drowned out by pump-induced noise) or mimics one (a false positive on the leak-detection side).
+The integrated model runs pump classification/RUL and pipe leak-detection concurrently on the same pressure/flow stream, with the pump model's output used to condition the leak model's thresholds — e.g., suppress leak-alert sensitivity briefly during a known pump transient, but flag jointly if both a pump anomaly and a leak signature appear together (a strong indicator of a more severe common-cause failure, like the gasket failure behind the Sinai incident in Section 1.1.2).
+Both feed a single station-level risk score combining: pump risk (Approach 1/3), leak precursor risk (Approach 2), weather exposure, and regional activity risk (Section 3.2) — one number per station per day, not four separate dashboards.
+Output: A single integrated risk index per station, which is what actually gets presented to KPC's maintenance planners (Section 7) — technicians shouldn't need to reconcile four separate alert systems to decide where to go first.
+4.6 How These Fit Together
+These aren't four alternative projects to choose between — they're layers of one system:
+
+
+
+Layer
+
+
+Approach
+
+
+Feeds into
+
+
+Detection
+
+
+1. Anomaly mapping
+
+
+Risk scoring
+
+
+Early warning
+
+
+2. Leak precursors
+
+
+Risk scoring
+
+
+Prioritisation
+
+
+3. RUL + lifecycle
+
+
+Maintenance calendar
+
+
+Synthesis
+
+
+4. Integrated pump–pipe model
+
+
+Single dashboard / risk index
+
+5. The Business Value
+The value drivers below are structured around the operational levers this system directly affects. Quantified savings will be finalised in collaboration with KPC once historical maintenance and failure-cost data are available; the performance figures cited are those already validated in the Week 6 laboratory exercise.
+Reduced emergency repair expenditure: shifting failures from unplanned to planned reduces reliance on emergency parts sourcing, technician overtime, and expedited logistics.
+Reduced throughput-stoppage duration: earlier detection narrows the window between failure onset and intervention, limiting delivery delays to Oil Marketing Companies.
+Efficient technician deployment: a 2.4 per cent false alarm rate limits unnecessary dispatch to functioning equipment.
+Earlier intervention window: daily risk assessment provides a multi-day advantage over a periodic manual inspection cycle.
+Reduced safety exposure: fewer undetected pressure and mechanical anomalies of the type associated with the incidents referenced in Section 1.2.
+6. Go-to-Market Strategy
+Adoption of this system is structured in three phases:
+Phase 1, Pilot deployment: a single booster or depot station with sufficient sensor history is selected to validate model performance under real operating conditions.
+Phase 2, Fleet-wide deployment: the system is extended across all ten pumping stations, with station-specific recalibration where operating conditions differ materially.
+Phase 3, Methodology extension: the underlying approach is extended to other infrastructure-dependent utilities facing comparable maintenance challenges, building on the reconciliation methodology previously validated in Hackathon 1.
+7. Implementation Rollout
+This section describes how the team would deploy the solution to a client, rather than how the team builds the solution internally. The methodology is structured in five phases and is designed to be repeatable across any prospective client site:
+
+
+
+Phase
+
+
+Activity
+
+
+1. Discovery and Data Assessment
+
+
+Audit the client's existing pump fleet, sensor infrastructure, and historical maintenance records to determine data availability and identify gaps that must be addressed before modelling can begin.
+
+
+2. Environment Integration
+
+
+Establish secure connections to the client's sensor and SCADA data feeds, or agree an interim data-sharing arrangement, and provision the infrastructure required to run the system within the client's environment.
+
+
+3. Model Calibration and Pilot
+
+
+Calibrate the classification and Remaining Useful Life models against the client's specific equipment and operating conditions, and run a time-boxed pilot at a single site to validate performance before wider rollout.
+
+
+4. Staff Training and Change Management
+
+
+Train the client's maintenance planners and technicians on the dashboard, alert workflow, and revised scheduling process, and incorporate their feedback into the interface.
+
+
+5. Go-Live and Ongoing Support
+
+
+Transition the pilot site to a monitored production service with defined uptime expectations, then extend deployment to additional sites under a support and maintenance agreement.
+
+KPC is the intended first deployment under this methodology. Phases 1 through 3 will be scoped and demonstrated using KPC as the anchor client within the fellowship's Weeks 7 through 12 delivery period, culminating in the Capstone Showcase.
+8. The KPC Ask
+To progress from a validated synthetic-data prototype to a system KPC can adopt with confidence, the team requests the following:
+Assignment of a technical contact within KPC's engineering team, to validate the sensor and failure-signature assumptions used in the synthetic dataset.
+Access to aggregated historical pump failure records, such as failure counts per station per year, to calibrate the synthetic dataset against actual operating conditions.
+A structured consultation with a maintenance planner, to confirm the proposed dashboard workflow aligns with existing scheduling practice.
+Information on KPC's existing business intelligence and dashboard infrastructure, to ensure compatibility with current systems.
+An introduction to the team responsible for pump maintenance budgeting, to establish sponsorship for the Phase 1 pilot.
+References
+Abdalla, R., Samara, H., Perozo, N., Carvajal, C. P., & Jaeger, P. (2022). Machine learning approach for predictive maintenance of the electrical submersible pumps (ESPs). ACS Omega, 7(20), 17641–17651. https://doi.org/10.1021/acsomega.1c05881
+Alghtus, K. M. A., Gannan, A., Alhajri, K. M., Al Jubouri, A. L. A., & Al-Janahi, H. A. I. (2025a). Short-horizon predictive maintenance of industrial pumps using time-series features and machine learning (arXiv:2508.19974). arXiv. https://doi.org/10.48550/arXiv.2508.19974
+Alghtus, K. M. A., Gannan, A., Alhajri, K. M., Al Jubouri, A. L. A., & Al-Janahi, H. A. I. (2025b). AI-powered machine learning approaches for fault diagnosis in industrial pumps (arXiv:2508.15550). arXiv. https://doi.org/10.48550/arXiv.2508.15550
+Aljameel, S. S., Alomari, D. M., Alismail, S., Khawaher, F., Alkhudhair, A. A., Aljubran, F., & Alzannan, R. M. (2022). An anomaly detection model for oil and gas pipelines using machine learning. Computation, 10(8), 138. https://doi.org/10.3390/computation10080138
+apidots. (2026, May 21). Artificial intelligence in oil and gas: Use cases, benefits and real-world examples. https://apidots.com/blog/ai-oil-gas-industry/
+Bless & Den Services. (2026, March 20). Environmental remediation cost in 2026. https://www.blessanddenservices.com/environmental-remediation-cost/
+Breaking Kenya News. (2020, September). Install leak detection system urgently, KPC told. https://www.breakingkenyanews.com/2020/09/install-leak-detection-system-urgently.html
+Business & Human Rights Resource Centre. (n.d.). Kenya Pipeline Company lawsuit (re explosion & fire in Nairobi). Retrieved August 12, 2026, from https://www.business-humanrights.org/en/latest-news/kenya-pipeline-company-lawsuit-re-explosion-fire-in-nairobi/
+Businessday NG. (2026, June 28). Nigeria's state power firm deploys AI to head off grid failures before they start. https://businessday.ng/energy/article/nigerias-state-power-firm-deploys-ai-to-head-off-grid-failures-before-they-start/
+Chen, L., Wei, L., Wang, Y., Wang, J., & Li, W. (2022). Monitoring and predictive maintenance of centrifugal pumps based on smart sensors. Sensors, 22(6), 2106. https://doi.org/10.3390/s22062106
+Ekong, A. P., James, G. G., & Ohaeri, I. (2024). Oil and gas pipeline leakage detection using IoT and deep learning algorithm. Journal of Information Systems and Informatics, 6(1), 421–434. https://doi.org/10.51519/journalisi.v6i1.652
+Energy and Petroleum Regulatory Authority. (2026, July 14). EPRA retains fuel prices for the period 15 July–14 August 2026 [Press statement]. https://www.epra.go.ke/pump-price-formulae
+Martone, A., D'Ambrosio, A., Ferrucci, M., Cembalo, A., Romano, G., & Zazzaro, G. (2025). Sensor-based monitoring data from an industrial system of centrifugal pumps. Data, 10(6), 91. https://doi.org/10.3390/data10060091
+Millennial Partners. (n.d.). AI-powered predictive maintenance in oil & gas: How Shell reduced downtime and improved asset reliability using machine learning. Retrieved August 12, 2026, from https://millennial.ae/ai-powered-predictive-maintenance-in-oil-gas-how-shell-reduced-downtime-and-improved-asset-reliability-using-machine-learning/
+Nation. (2020, July 3). Established: Cause of Sinai fire tragedy. Daily Nation. https://nation.africa/kenya/news/Established-Cause-of-Sinai-fire-tragedy-/1056-1368976-tsks1nz/index.html
+Nphantawee. (2018). Pump sensor data for predictive maintenance [Data set]. Kaggle. https://www.kaggle.com/datasets/nphantawee/pump-sensor-data
+Nwokonkwo, O. C., Samuel, N. U., Eze, U. F., & John-Otumu, A. M. (2024). Machine learning framework for real-time pipeline anomaly detection and maintenance needs forecast using Random Forest and Prophet model. Automation, Control and Intelligent Systems, 12(2), 22–34. https://doi.org/10.11648/j.acis.20241202.11
+Odu, P. O., & Ako, P. A. (2026). Transforming predictive maintenance with machine learning: A comprehensive review of innovations and applications in centrifugal pumps. Nigerian Journal of Technology, 45(1), 1–22. https://doi.org/10.4314/njt.2026.5737
+Oshingbesan, A. (2022). Leak detection in natural gas pipeline using machine learning models (arXiv:2209.10121). arXiv. https://doi.org/10.48550/arXiv.2209.10121
+Pipeline and Gas Journal. (2019, September). East Africa's leakage incidents points to detection needs. https://pgjonline.com/magazine/2019/september-2019-vol-246-no-9/africa-spotlight/east-africa-s-leakage-incidents-points-to-detection-needs
+Trilogy Energy Solutions. (2026, January 5). The role of machine learning in predictive maintenance for midstream companies. https://trilogyes.com/blog/the-role-of-machine-learning-in-predictive-maintenance-for-midstream-companies
+U.S. Environmental Protection Agency. (2008). Costs and issues related to remediation of petroleum-contaminated sites. https://cfpub.epa.gov/si/si_public_record_Report.cfm?Lab=NRMRL&dirEntryId=96736
+Wikipedia contributors. (2026a). 2011 Nairobi pipeline fire. In Wikipedia. Retrieved August 12, 2026, from https://en.wikipedia.org/wiki/2011_Nairobi_pipeline_fire
+Wikipedia contributors. (2026b). Molo fire. In Wikipedia. Retrieved August 12, 2026, from https://en.wikipedia.org/wiki/Molo_fire
+Wu, F., Wu, Q., Tan, Y., & Xu, X. (2024). Remaining useful life prediction based on deep learning: A survey. Sensors, 24(11), 3454. https://doi.org/10.3390/s24113454
+Note: Alghtus et al., 2025a refers to the "Short-Horizon Predictive Maintenance" paper already cited in Section 2.2.
+
+========================================
+FILE: Documentation/Capstone_Proposal_Team_NULL_TERMINATORS (1).docx
+========================================
+
+Capstone Project Proposal
+Predictive Maintenance for KPC Pipeline Pump Infrastructure
+
+1. Introduction
+Team NULL_TERMINATORS is a five-member team from the KPC Cohort, Inuka Fellowship, Power Learn Project. The team placed first in Hackathon 1, developing a revenue reconciliation pipeline that addressed billing and payment discrepancies in KPC's order-to-cash process. This capstone extends the same reconciliation methodology to a second operational problem within the pipeline network: unplanned pump failure.
+
+
+Name
+
+Role
+
+Silas Kibet
+
+Data Engineering Lead — pipeline, synthetic data generation, ETL
+
+Brian Kioko
+
+Modelling and Machine Learning Lead — hypothesis testing, feature engineering, modelling
+
+Ingrid Miriam
+
+Dashboard and Visualisation Lead — dashboarding, stakeholder views
+
+Eugene Obunde
+
+Storytelling and ROI Lead — briefs, executive narrative, business case
+
+Lameck Mugo
+
+Quality Assurance and Documentation Lead — testing, UAT notes, deployment readiness
+2. The Problem
+KPC operates approximately 1,342 kilometres of pipeline connecting Mombasa, Nairobi, Nakuru, Eldoret, and Kisumu, with a combined storage and handling capacity of approximately 14 billion litres annually. Unplanned pump failures at booster and depot stations result in throughput stoppages, delayed deliveries to Oil Marketing Companies, emergency repair costs, and safety-critical pressure excursions.
+Documented incidents illustrate the operational risk this presents. An estimated 400,000 litres of product were lost at Thange River in 2015, and 551,000 litres were lost at Kiboko in 2018, valued at approximately KES 63 million. These incidents indicate that undetected mechanical degradation carries measurable safety and financial consequences.
+Current maintenance practice is time-based and follows a fixed interval. This approach does not account for the actual condition of individual pumps, resulting in unnecessary servicing of functioning equipment and insufficient attention to units approaching failure.
+3. The Solution
+The team proposes a condition-based maintenance system that replaces fixed-interval servicing with continuous, data-driven risk assessment. The system operates as follows:
+A classification model evaluates each pump daily against a seven-day failure risk window, using rolling-window sensor features derived from vibration, temperature, pressure, and motor current readings.
+A regression model estimates Remaining Useful Life, in hours, for pumps identified as high-risk, providing maintenance planners with a defined service window.
+Maintenance scheduling is prioritised according to model output, directing technician time and spare-parts allocation toward pumps that require intervention.
+This methodology has been validated in the Week 6 laboratory exercise, achieving 94.2 percent classification accuracy, 84.3 percent failure-detection sensitivity, a 2.4 percent false alarm rate, and a Remaining Useful Life prediction error of 105.9 hours (Mean Absolute Error), using a synthetic dataset of 24 pumps across four depots.
+4. The Business Value
+The value drivers below are structured around the operational levers this system directly affects. Quantified savings will be finalised in collaboration with KPC once historical maintenance and failure-cost data are available; the performance figures cited are those already validated in the Week 6 laboratory exercise.
+Reduced emergency repair expenditure: shifting failures from unplanned to planned reduces reliance on emergency parts sourcing, technician overtime, and expedited logistics.
+Reduced throughput-stoppage duration: earlier detection narrows the window between failure onset and intervention, limiting delivery delays to Oil Marketing Companies.
+Efficient technician deployment: a 2.4 percent false alarm rate limits unnecessary dispatch to functioning equipment.
+Earlier intervention window: daily risk assessment provides a multi-day advantage over a periodic manual inspection cycle.
+Reduced safety exposure: fewer undetected pressure and mechanical anomalies of the type associated with the incidents referenced in Section 2.
+5. Go-to-Market Strategy
+Adoption of this system is structured in three phases:
+Phase 1, Pilot deployment: a single booster or depot station with sufficient sensor history is selected to validate model performance under real operating conditions.
+Phase 2, Fleet-wide deployment: the system is extended across all ten pumping stations, with station-specific recalibration where operating conditions differ materially.
+Phase 3, Methodology extension: the underlying approach is extended to other infrastructure-dependent utilities facing comparable maintenance challenges, building on the reconciliation methodology previously validated in Hackathon 1.
+6. Implementation Rollout
+This section describes how the team would deploy the solution to a client, rather than how the team builds the solution internally. The methodology is structured in five phases and is designed to be repeatable across any prospective client site:
+
+
+Phase
+
+Activity
+
+1. Discovery and Data Assessment
+
+Audit the client's existing pump fleet, sensor infrastructure, and historical maintenance records to determine data availability and identify gaps that must be addressed before modelling can begin.
+
+2. Environment Integration
+
+Establish secure connections to the client's sensor and SCADA data feeds, or agree an interim data-sharing arrangement, and provision the infrastructure required to run the system within the client's environment.
+
+3. Model Calibration and Pilot
+
+Calibrate the classification and Remaining Useful Life models against the client's specific equipment and operating conditions, and run a time-boxed pilot at a single site to validate performance before wider rollout.
+
+4. Staff Training and Change Management
+
+Train the client's maintenance planners and technicians on the dashboard, alert workflow, and revised scheduling process, and incorporate their feedback into the interface.
+
+5. Go-Live and Ongoing Support
+
+Transition the pilot site to a monitored production service with defined uptime expectations, then extend deployment to additional sites under a support and maintenance agreement.
+KPC is the intended first deployment under this methodology. Phases 1 through 3 will be scoped and demonstrated using KPC as the anchor client within the fellowship's Weeks 7 through 12 delivery period, culminating in the Capstone Showcase.
+7. The KPC Ask
+To progress from a validated synthetic-data prototype to a system KPC can adopt with confidence, the team requests the following:
+Assignment of a technical contact within KPC's engineering team, to validate the sensor and failure-signature assumptions used in the synthetic dataset.
+Access to aggregated historical pump failure records, such as failure counts per station per year, to calibrate the synthetic dataset against actual operating conditions.
+A structured consultation with a maintenance planner, to confirm the proposed dashboard workflow aligns with existing scheduling practice.
+Information on KPC's existing business intelligence and dashboard infrastructure, to ensure compatibility with current systems.
+An introduction to the team responsible for pump maintenance budgeting, to establish sponsorship for the Phase 1 pilot.
+
+========================================
+FILE: Documentation/Methodology_MVP_Execution_Plan.docx
+========================================
+
+Methodology
+MVP Execution Plan for Predictive Maintenance of KPC Pipeline Pump Infrastructure
+Team NULL_TERMINATORS
+This methodology translates the research and objectives set out in Sections 1–4 of the capstone proposal into a concrete, buildable execution plan for the remaining capstone period. It combines the team's own literature-grounded design (sensor strategy, external risk features, the four solution approaches) with the implementation-focused MVP realignment proposed by the team, keeping the elements from both that are consistent with each other and dropping or deferring only what would put the Week 12 demonstration at risk. Enterprise-scale components that neither document currently has fully specified — streaming infrastructure, physics-guided modelling, full 3D GIS, production MLOps — are treated as a Phase 2 roadmap (Section 6.3, Go-to-Market Strategy) rather than part of the capstone deliverable.
+1. Rationale: From Architecture to MVP
+The original proposal (Sections 1–4) established the analytical foundation: which signals matter, why they matter, and which four solution approaches would combine them into a single system. It intentionally did not commit to a specific technology stack. The MVP realignment closes that gap by choosing a concrete, low-risk stack capable of demonstrating all four approaches end-to-end within the remaining timeline, rather than a distributed enterprise architecture that could not be fully integrated in 12 weeks.
+The guiding principle for this methodology is therefore: build less infrastructure, but integrate every theoretical component that differentiates the project — the reconciliation-based health signal, explainable predictions, uncertainty-aware RUL, and a station-level risk view — into one working pipeline.
+2. System Pipeline
+The system is implemented as a single, monolithic pipeline for the capstone period, rather than the distributed streaming architecture (Kafka, InfluxDB) that would be appropriate at production scale. This removes infrastructure risk without changing which signals feed the model:
+Sensor + Weather + Regional-Risk Data (CSV/Pandas) → Feature Engineering (rolling-window + exogenous) → Flowgard Reconciliation → ML Prediction (Classification + RUL) → Uncertainty Estimation → Explainability (SHAP) → Alerting → API → Dashboard / 3D Visualization
+Loading data via Pandas/CSV rather than a live Kafka/InfluxDB stream is a deployment-scale simplification, not a scope cut on the feature set: the weather (Section 3.2) and regional-activity risk features from the original data foundation remain part of the pipeline, computed as batch features pulled from the same APIs (Open-Meteo for development, KMD as the production target) rather than ingested in real time. This keeps the model's exogenous context intact while avoiding the operational cost of a streaming layer the capstone does not need.
+3. Data Strategy
+The three-track data strategy from the original proposal (Section 3.1) is retained in full for the MVP, since all three tracks are Pandas/CSV-compatible and require no streaming infrastructure:
+
+
+
+Track
+
+
+Role in the MVP
+
+
+Status
+
+
+1. Public real-world datasets
+
+
+Martone et al. (2025) centrifugal pump dataset; Kaggle pump_sensor_data; Kaggle Water Pump RUL — used to prototype and sanity-check the feature-engineering and modelling pipeline ahead of synthetic data being finalised.
+
+
+In scope
+
+
+2. Synthetic data (Week 6 approach, extended)
+
+
+24-pump, four-depot synthetic dataset with rule-based degradation injection, per Silas Kibet's data engineering role — the primary training set for the MVP demonstration.
+
+
+In scope — primary MVP dataset
+
+
+3. Real KPC data
+
+
+SCADA/historian read access requested via the KPC Ask (Section 8) — used to validate and recalibrate the model post-capstone.
+
+
+Deferred — bridging measure until access is granted
+
+Exogenous features (weather, regional activity risk) are computed once per batch run rather than streamed, consistent with Section 3.3's original design, which already treated these as slowly-updating context features rather than fast-moving sensor signals.
+4. Flowgard Reconciliation Engine
+Flowgard is the team's concrete engineering realisation of the pressure-based anomaly reasoning already set out in Approach 2 (Leak Precursor Pattern Recognition) and Approach 4 (Integrated Pump–Pipe Health Model). Where the original proposal described extracting rolling-window statistical features from raw pressure signals to detect precursor patterns, Flowgard adds a physics-referenced comparison: it calculates a residual between the pump's actual pressure and a simulated expected pressure for the same operating conditions.
+Pressure Residual = Actual Pressure − Simulated Pressure
+This residual is converted into a Health Deviation Index — a second, independent signal that sits alongside the rolling-window classification features rather than replacing them. Combining a data-driven precursor signature (Approach 2) with a physics-referenced residual (Flowgard) gives the classification model two structurally different ways of detecting the same degradation, which is a stronger basis for the anomaly-vs-normal distinction than either method alone. This is also the component that most directly operationalises Approach 4's integrated pump–pipe risk score: the Health Deviation Index becomes one of the inputs combined into the single per-station risk index, alongside pump risk, leak precursor risk, weather exposure, and regional activity risk.
+Because Flowgard is not yet backed by a literature citation in Section 2 (State of the Art), the team should document its derivation and validate it against the synthetic dataset before presenting it as the project's primary differentiator — this strengthens rather than undermines the claim.
+5. Predictive and Prescriptive Modelling
+5.1 Classification and RUL Regression
+The classification model (seven-day failure risk window) and RUL regression model (Objectives 2 and 3) remain the core of the system, now trained on the extended feature set: rolling-window sensor features, weather and regional-risk context, and the Flowgard Health Deviation Index. The Week 6 benchmark — 94.2% classification accuracy, 84.3% failure-detection sensitivity, 2.4% false-alarm rate, and 105.9-hour RUL MAE — is the current validated baseline, and should be re-run once Flowgard features are incorporated rather than assumed to hold unchanged.
+5.2 Uncertainty Estimation
+Monte Carlo Dropout is added to the RUL regression model to produce confidence intervals around each RUL estimate, rather than a single point figure. This directly strengthens Objective 3 ("a defined and actionable service window") and Objective 6 (validating RUL-error benchmarks): a maintenance planner acting on "120 hours ± 15 hours" can make a materially better scheduling decision than one acting on "120 hours" alone, and it lets the team report a calibrated error bound rather than only a mean absolute error.
+5.3 Explainability
+SHAP feature-importance analysis, already specified for precursor-window analysis in Approach 2, is extended to explain every prediction the classification and RUL models produce — not only leak precursor events. This gives maintenance planners and technicians a consistent answer to "why is this pump flagged," and is what drives the dynamic component-level states (bearing, impeller, seal) in the 3D pump visualization described in Section 7.
+6. Alerting and Maintenance Prioritisation
+Model output is converted into action through two coupled mechanisms:
+Alerting. Email notifications and browser push notifications cover the MVP demonstration. Telco-based SMS integration — relevant for field technicians without regular dashboard access — is deferred to the production roadmap, since it introduces an external carrier dependency the capstone timeline does not need to absorb.
+Maintenance prioritisation. Approach 3's RUL-and-lifecycle framework (pump age, prior interventions, design life) ranks flagged pumps into the prioritised maintenance calendar specified in Objective 4, using the confidence-adjusted RUL estimates from Section 5.2 rather than risk score alone.
+Together these ensure a flagged pump doesn't just generate a dashboard entry — it reaches a planner through a channel they will actually see, ranked against every other flagged pump by genuine urgency.
+7. Visualization and Dashboard
+The dashboard is built in Next.js and is the concrete implementation of the station-level risk view described in Approach 1 (Spatiotemporal Anomaly Mapping) and Approach 4 (the single integrated risk index). Scope is deliberately controlled so that frontend work does not become the project's critical path:
+A 2D Leaflet/Mapbox map provides pipeline and station-level geographic context — sufficient to show the heat-map behaviour Approach 1 calls for (e.g. elevated anomaly rates at river-crossing stations during the long rains) without building a full 3D GIS terrain.
+A single interactive 3D pump model (React Three Fiber or Plotly) represents bearing, impeller, and seal components, with each component's visual state driven by the SHAP feature-importance output from Section 5.3 — giving a direct, literal link between "the model flagged this pump" and "here is the specific part driving that prediction."
+Core dashboard views: pump health, failure predictions, RUL estimates with confidence intervals, SHAP explanations, pipeline station status, alerts, and Flowgard health deviations — one screen per concern, feeding from the same underlying risk index.
+Nationwide 3D pipeline mapping and full geospatial infrastructure modelling are deferred; a single well-instrumented 3D pump model demonstrates the same visual link between prediction and physical cause at a fraction of the build cost.
+8. What Is Deferred, and Why
+The following are explicitly out of scope for the Week 12 demonstration. None are rejected — each remains a legitimate Phase 2/enterprise extension once the MVP has validated the underlying approach (Section 6, Go-to-Market Strategy, Phase 3):
+
+
+
+Deferred component
+
+
+Reason
+
+
+Kafka-based streaming ingestion
+
+
+Not required to validate the model or the demonstration; adds integration risk without changing which features the model sees.
+
+
+InfluxDB / time-series infrastructure
+
+
+Batch CSV/Pandas processing is sufficient for the synthetic and public datasets used in the MVP.
+
+
+Physics-guided neural networks
+
+
+Not part of the literature-grounded modelling approach in Section 2; the current RF/XGBoost-style classification and regression models are sufficient and already validated.
+
+
+Full 3D GIS / nationwide pipeline mapping
+
+
+A single 3D pump model plus a 2D station map preserves the visual impact at substantially lower build cost.
+
+
+Production-grade MLOps infrastructure
+
+
+Not required to demonstrate model validity within a fixed-timeline capstone; relevant once the system moves toward Phase 1 pilot deployment (Section 6).
+
+
+Telco SMS integration
+
+
+Email and browser push are sufficient to demonstrate the alerting workflow; SMS adds an external carrier dependency.
+
+
+Large-scale distributed deployment
+
+
+Out of scope until a production client (Section 7, Implementation Rollout) is confirmed.
+
+9. Execution Timeline
+This timeline governs the capstone build itself and sits inside the Weeks 7–12 window already referenced in the Implementation Rollout (Section 7), which separately describes the client-facing deployment methodology this same system would follow at KPC.
+
+
+
+Week
+
+
+Milestone
+
+
+Expected Outcome
+
+
+Week 8
+
+
+Data & ML Integration
+
+
+Finalise the data pipeline and retrain/validate the classification and RUL models using the integrated Flowgard and exogenous (weather/regional-risk) features.
+
+
+Weeks 9–10
+
+
+Frontend & API Integration
+
+
+Build the Next.js dashboard, 2D map, and static 3D pump model; connect backend REST APIs.
+
+
+Week 11
+
+
+Full System Integration
+
+
+Connect predictions, alerts, SHAP explanations, RUL confidence intervals, and dynamic 3D component states into one live pipeline.
+
+
+Week 12
+
+
+Finalisation & Demonstration
+
+
+Dress rehearsal, fix critical issues, record the demonstration, finalise presentation materials for the Capstone Showcase.
+
+10. Success Criteria
+The MVP is successful if it demonstrates the following workflow end-to-end, live, in front of a reviewer — this takes priority over adding further features:
+Pump Data → Flowgard Reconciliation → Health Deviation → ML Prediction → RUL & Confidence → SHAP Explanation → Alert → Dashboard Visualization
+1. Pump telemetry entering the system.
+2. Flowgard calculating the pressure residual.
+3. The Health Deviation Index being updated.
+4. The classification model generating a prediction (Objective 2).
+5. RUL and confidence-interval information being displayed (Objectives 3 and 6, Section 5.2).
+6. SHAP identifying the influential failure factors (Section 5.3).
+7. An alert being triggered when predefined conditions are met (Section 6).
+8. The affected pump components being reflected visually in the 3D model (Section 7).
+Each of these eight checkpoints maps directly back to a specific objective or section in the original proposal, which is deliberate: the MVP is not a reduced version of the project's ambition, it is the fastest path to demonstrating every element the theoretical proposal claimed the system would deliver.
+========================================
+FILE: Documentation/mvp.docx
+========================================
+
+
+Strategic Realignment: Capstone MVP Scope & Architecture 
+
+1. Executive Summary 
+
+Following the Week 7 progress review and a technical assessment of the proposed six-layer architecture, the project should be strategically realigned toward a Minimum Viable Product (MVP). 
+
+The original enterprise architecture—incorporating Kafka, InfluxDB, Physics-Guided Neural Networks, full 3D GIS visualization, and MLOps—is technically ambitious and potentially suitable for a long-term production roadmap. However, implementing the complete architecture within the remaining 12-week capstone timeline introduces significant integration, infrastructure, and delivery risks. 
+
+The recommended approach is therefore to prioritize a polished, integrated, and demonstrable MVP that preserves the project's strongest differentiator: the Flowgard reconciliation engine. 
+
+The objective is not to reduce the technical value of the project, but to concentrate effort on the components that provide the highest demonstrable impact within the available timeframe. 
+
+2. Strategic Decision 
+
+The project will transition from a complex distributed enterprise architecture to a high-impact monolithic pipeline for the capstone demonstration. 
+
+The MVP will prioritize: 
+
+● Reliable data processing 
+
+● Flowgard-based equipment health reconciliation 
+
+● Validated machine-learning predictions 
+
+● Explainable AI 
+
+● Remaining Useful Life (RUL) confidence estimation 
+
+● Automated alerting 
+
+● Interactive visualization 
+
+● End-to-end system integration
+
+Enterprise infrastructure components that do not materially improve the capstone demonstration will be deferred. 
+
+This approach allows the team to demonstrate a complete working solution rather than an incomplete collection of advanced components. 
+
+3. MVP Architecture 
+
+3.1 Data Layer 
+
+The synthetic dataset will be loaded directly using Pandas and CSV files. 
+
+This removes the need to implement and maintain Kafka and InfluxDB during the capstone period. 
+
+The simplified pipeline will be: 
+
+CSV Dataset → Pandas Processing → Feature Engineering → Flowgard Reconciliation → ML Prediction → Explainability → API → Frontend 
+
+This provides a straightforward and reproducible development environment while maintaining the core analytical functionality. 
+
+3.2 Flowgard Reconciliation Engine 
+
+Flowgard will remain the core technical differentiator of the project. 
+
+The reconciliation engine will calculate the residual between actual and simulated pressure: Pressure Residual = Actual Pressure − Simulated Pressure 
+
+The resulting residual will be used to derive a Health Deviation Index, providing an additional signal for identifying abnormal pump behaviour. 
+
+This component is particularly important because it differentiates the project from a conventional predictive-maintenance dashboard that relies only on historical sensor features. 
+
+3.3 Machine Learning and Explainability 
+
+The validated machine-learning models will be integrated into the MVP. 
+
+The current target model performance is approximately 94.2% accuracy, subject to final validation after Flowgard features are incorporated.
+
+The system will additionally implement: 
+
+● Monte Carlo Dropout for estimating uncertainty and generating RUL confidence intervals. 
+
+● SHAP for explaining model predictions and identifying the features contributing most strongly to a predicted failure. 
+
+The combination provides both prediction and explainability, allowing users to understand not only what the system predicts but also why. 
+
+3.4 Alerting 
+
+For the capstone demonstration, the alerting layer will use: 
+
+● Email notifications 
+
+● Browser push notifications 
+
+Telco-based SMS integration will be deferred. 
+
+This keeps the alerting workflow functional while avoiding unnecessary integration complexity and external dependencies. 
+
+3.5 Frontend 
+
+The frontend will continue to use Next.js. 
+
+However, visualization scope will be controlled carefully to ensure that frontend development does not become the project's primary bottleneck. 
+
+The dashboard will focus on: 
+
+● Pump health 
+
+● Failure predictions 
+
+● RUL estimates 
+
+● Confidence intervals 
+
+● SHAP explanations 
+
+● Pipeline station status 
+
+● Alerts 
+
+● Flowgard health deviations 
+
+4. 3D Visualization Strategy
+
+The project will retain a 3D component to preserve the intended visual impact while avoiding the complexity of a full 3D GIS implementation. 
+
+What We Will Build 
+
+A single interactive 3D pump model will be developed using an appropriate visualization framework such as React Three Fiber or Plotly. 
+
+The pump model will represent key components including: 
+
+● Bearing 
+
+● Impeller 
+
+● Seal 
+
+Component states will dynamically respond to model outputs and SHAP feature importance. 
+
+This creates a direct visual relationship between the machine-learning prediction and the physical pump components. 
+
+What We Will Defer 
+
+The following will not form part of the MVP: 
+
+● Full 3D GIS terrain 
+
+● Full 3D mapping of Kenya 
+
+● Complex geospatial infrastructure modelling 
+
+Instead, the system will use a lightweight 2D Leaflet or Mapbox m
+
+ap to provide pipeline and station-level geographical context. 
+
+Expected Benefit 
+
+This compromise preserves the project's "WOW" factor while substantially reducing frontend development and integration time. 
+
+The team can therefore spend more time ensuring that the underlying prediction, reconciliation, alerting, and explanation workflows are reliable. 
+
+5. Updated Implementation Timeline 
+
+Week Primary Milestone Expected Outcome
+
+Week 8 Data & ML Integration 
+
+Finalize the data pipeline and retrain/validate ML models using integrated Flowgard features. 
+
+Weeks 9–10 
+
+Frontend & API Integration 
+
+Establish the Next.js dashboard, 2D map, static 3D pump model, and connect the backend REST APIs. 
+
+Week 11 Full System Integration 
+
+Week 12 Finalization & Demonstration 
+
+Connect predictions, alerts, SHAP explanations, RUL confidence intervals, and dynamic 3D component states. 
+
+Conduct dress rehearsal, fix critical issues, record the demonstration, and finalize presentation materials. 
+
+6. Scope: Build vs Defer Build for MVP 
+
+● Pandas/CSV data pipeline 
+
+● Flowgard reconciliation engine 
+
+● Health Deviation Index 
+
+● Validated ML models 
+
+● RUL prediction 
+
+● Monte Carlo Dropout 
+
+● SHAP explainability 
+
+● Email alerts 
+
+● Browser push notifications 
+
+● Next.js frontend 
+
+● 2D pipeline map 
+
+● Interactive 3D pump model 
+
+● REST API integration 
+
+● End-to-end demonstration 
+
+Defer to Future Enterprise Roadmap 
+
+● Kafka-based streaming architecture ● InfluxDB/time-series infrastructure ● Physics-Guided Neural Networks ● Full 3D GIS terrain 
+
+● Nationwide 3D pipeline visualization ● Production-grade MLOps infrastructure ● Telco SMS integration 
+
+● Large-scale distributed deployment
+
+These components should not be viewed as rejected technologies. They represent potential Phase 2 / enterprise-scale extensions once the MVP has been validated. 
+
+7. Key Risks Mitigated 
+
+The MVP approach directly reduces several project risks: 
+
+Integration Risk 
+
+Fewer distributed services and infrastructure dependencies mean fewer points of failure during integration. 
+
+Development Risk 
+
+The team can focus on delivering core functionality rather than spending significant time configuring infrastructure. 
+
+Timeline Risk 
+
+Complex components are deliberately deferred, increasing the probability of completing the system before Week 12. 
+
+Demonstration Risk 
+
+A smaller but fully integrated system is more reliable for a live demonstration than a larger system with partially implemented components. 
+
+Team Burnout 
+
+Reducing unnecessary technical complexity allows the team to concentrate on quality, testing, documentation, and presentation. 
+
+8. Success Criteria 
+
+The MVP should be considered successful if it can demonstrate the following complete workflow: 
+
+Pump Data → Flowgard Reconciliation → Health Deviation → ML Prediction → RUL & Confidence → SHAP Explanation → Alert → Dashboard Visualization
+
+A successful demonstration should allow a reviewer to see: 
+
+1. Pump telemetry entering the system. 
+
+2. Flowgard calculating the pressure residual. 
+
+3. The Health Deviation Index being updated. 
+
+4. The ML model generating a prediction. 
+
+5. RUL and confidence information being displayed. 
+
+6. SHAP identifying influential failure factors. 
+
+7. An alert being triggered when predefined conditions are met. 
+
+8. The affected pump components being reflected visually in the 3D model. This end-to-end workflow should take priority over additional features. 
+
+9. Immediate Action Required 
+
+The team should now: 
+
+1. Review the proposed MVP scope. 
+
+2. Confirm alignment on the architecture and priorities. 
+
+3. Freeze the technical baseline once consensus is reached. 
+
+4. Avoid introducing additional major technologies unless they are essential to the MVP. 
+
+5. Focus development on integration, reliability, testing, and demonstration readiness. 
+
+The remaining development period should be treated as an execution phase rather than an architecture-exploration phase. 
+
+10. Final Recommendation 
+
+The project already has a strong technical foundation and a clear differentiator through the Flowgard reconciliation approach. 
+
+The recommended strategy is therefore to build less, but integrate better. 
+
+A complete MVP demonstrating reconciliation, predictive maintenance, explainable AI, uncertainty estimation, alerting, and interactive visualization will provide substantially more value than an ambitious enterprise architecture that cannot be fully integrated within the capstone timeframe.
+
+The enterprise components remain valuable as a future roadmap. For the current capstone, however, the priority should be: 
+
+Reliable → Integrated → Explainable → Demonstrable → Polished 
+
+Once the MVP scope is approved, the architecture should be frozen and the team should proceed directly into implementation and integration.
