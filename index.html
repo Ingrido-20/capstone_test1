@@ -11,6 +11,10 @@
   <!-- Chart.js & Lucide Icons via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Three.js & OrbitControls for True 3D WebGL Component Visualization -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
@@ -162,7 +166,6 @@
             
             <div class="pump-visualizer-container" style="min-height: 380px; padding: 0;">
               <svg id="gisSvgMap" width="100%" height="380" viewBox="0 0 900 380" style="background: #0B1120;">
-                <!-- Grid Lines -->
                 <defs>
                   <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
                     <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
@@ -175,21 +178,19 @@
                 </defs>
                 <rect width="900" height="380" fill="url(#grid)" />
 
-                <!-- Pipeline Path (Mombasa to Kisumu) -->
+                <!-- Pipeline Path -->
                 <path d="M 80,300 Q 220,280 350,220 T 520,160 T 700,120 T 820,90" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="12" stroke-linecap="round"/>
-                <!-- Fluid Motion Line -->
                 <path id="fluidFlowLine" d="M 80,300 Q 220,280 350,220 T 520,160 T 700,120 T 820,90" fill="none" stroke="url(#pipeGrad)" stroke-width="6" stroke-dasharray="15 10" stroke-linecap="round">
                   <animate attributeName="stroke-dashoffset" from="100" to="0" dur="3s" repeatCount="indefinite" />
                 </path>
 
-                <!-- Weather Overlay (River Crossings / Heavy Rain Soil Erosion) -->
+                <!-- Weather Overlay -->
                 <g id="weatherOverlay" style="opacity: 0.8;">
                   <path d="M 300,180 Q 350,240 400,320" fill="none" stroke="#3B82F6" stroke-width="3" stroke-dasharray="4 4" opacity="0.6"/>
                   <text x="310" y="270" fill="#60A5FA" font-size="11" font-family="Inter">Thange River Crossing (High Soil Porosity)</text>
                 </g>
 
                 <!-- Station Nodes -->
-                <!-- PS1 Mombasa -->
                 <g class="map-node" data-station="PS1" transform="translate(80,300)">
                   <circle r="14" fill="#1E293B" stroke="#008751" stroke-width="3"/>
                   <circle r="6" fill="#008751"/>
@@ -197,28 +198,24 @@
                   <text x="0" y="44" text-anchor="middle" fill="#94A3B8" font-size="10">Terminal Depot</text>
                 </g>
 
-                <!-- PS3 Mtito Andei -->
                 <g class="map-node" data-station="PS3" transform="translate(260,250)">
                   <circle r="14" fill="#1E293B" stroke="#008751" stroke-width="3"/>
                   <circle r="6" fill="#008751"/>
                   <text x="0" y="-22" text-anchor="middle" fill="#F8FAFC" font-size="12" font-weight="600">PS3 Mtito Andei</text>
                 </g>
 
-                <!-- PS5 Sultan Hamud -->
                 <g class="map-node" data-station="PS5" transform="translate(420,195)">
                   <circle r="14" fill="#1E293B" stroke="#008751" stroke-width="3"/>
                   <circle r="6" fill="#008751"/>
                   <text x="0" y="30" text-anchor="middle" fill="#F8FAFC" font-size="12" font-weight="600">PS5 Sultan Hamud</text>
                 </g>
 
-                <!-- PS6 Nairobi -->
                 <g class="map-node" data-station="PS6" transform="translate(560,150)">
                   <circle r="16" fill="#1E293B" stroke="#008751" stroke-width="3"/>
                   <circle r="7" fill="#008751"/>
                   <text x="0" y="-24" text-anchor="middle" fill="#F8FAFC" font-size="12" font-weight="700">PS6 Nairobi Terminal</text>
                 </g>
 
-                <!-- PS7 Nakuru (Anomalous Station) -->
                 <g class="map-node" data-station="PS7" transform="translate(700,120)">
                   <circle r="16" fill="#1E293B" stroke="#D9232D" stroke-width="3"/>
                   <circle r="8" fill="#D9232D">
@@ -228,7 +225,6 @@
                   <text x="0" y="44" text-anchor="middle" fill="#D9232D" font-size="10" font-weight="600">⚠ PUMP 4 WEAR</text>
                 </g>
 
-                <!-- PS9 Kisumu -->
                 <g class="map-node" data-station="PS9" transform="translate(820,90)">
                   <circle r="14" fill="#1E293B" stroke="#008751" stroke-width="3"/>
                   <circle r="6" fill="#008751"/>
@@ -238,7 +234,7 @@
             </div>
           </div>
 
-          <!-- Selected Station Health & Details Card -->
+          <!-- Station Inspector Card -->
           <div class="card">
             <div class="card-header">
               <div class="card-title" id="selectedStationTitle"><i data-lucide="info"></i> Station Inspector: PS7 Nakuru</div>
@@ -265,7 +261,7 @@
               </table>
 
               <button class="btn btn-primary" style="margin-top: 8px;" id="btnInspectPump4">
-                <i data-lucide="wrench"></i> Deep Diagnostics on Pump 4
+                <i data-lucide="wrench"></i> Deep 3D Diagnostics on Pump 4
               </button>
             </div>
           </div>
@@ -276,7 +272,6 @@
       <!-- VIEW 2: FLOWGARD RESIDUAL & SCADA TELEMETRY -->
       <!-- ========================================== -->
       <section id="view-scada" class="view-panel">
-        <!-- Flowgard Reconciliation Engine Banner -->
         <div class="flowgard-banner">
           <div>
             <h3 style="font-family: var(--font-heading); font-size: 1.1rem; color: white;">Flowgard Hydraulic Reconciliation Engine</h3>
@@ -287,7 +282,6 @@
           </div>
         </div>
 
-        <!-- Telemetry Simulator Injector Toolbar -->
         <div style="display: flex; gap: 12px; margin-bottom: 20px; background: var(--bg-card); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color); align-items: center;">
           <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);"><i data-lucide="sliders"></i> Synthetic Fault Injector:</span>
           <button class="btn btn-success fault-btn active" data-fault="normal"><i data-lucide="check-circle"></i> Normal Flow Baseline</button>
@@ -297,7 +291,6 @@
         </div>
 
         <div class="grid-2col">
-          <!-- Flowgard Pressure Residual Chart -->
           <div class="card">
             <div class="card-header">
               <div class="card-title"><i data-lucide="trending-up"></i> Flowgard Health Deviation Index (HDI)</div>
@@ -308,7 +301,6 @@
             </div>
           </div>
 
-          <!-- Real-Time Telemetry Stream Gauge Cards -->
           <div class="card">
             <div class="card-header">
               <div class="card-title"><i data-lucide="gauge"></i> SCADA Sensor Readings</div>
@@ -361,59 +353,31 @@
       </section>
 
       <!-- ========================================== -->
-      <!-- VIEW 3: 3D PUMP COMPONENT INSPECTOR -->
+      <!-- VIEW 3: TRUE 3D PUMP COMPONENT INSPECTOR -->
       <!-- ========================================== -->
       <section id="view-3d" class="view-panel">
         <div class="grid-2col">
-          <!-- Interactive SVG 3D Pump Model -->
+          <!-- True 3D WebGL Interactive Render Canvas -->
           <div class="card">
             <div class="card-header">
-              <div class="card-title"><i data-lucide="box"></i> Interactive 3D Centrifugal Pump Breakdown</div>
-              <div class="card-subtitle">Click component to inspect real-time degradation & SHAP attribution</div>
+              <div>
+                <div class="card-title"><i data-lucide="box"></i> True 3D WebGL Centrifugal Pump Breakdown</div>
+                <div class="card-subtitle">Click 3D component to inspect real-time degradation & SHAP attribution</div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn" id="btnReset3dView"><i data-lucide="refresh-cw"></i> Reset 3D View</button>
+              </div>
+            </div>
+
+            <!-- 3D Navigation Controls Instruction Bar -->
+            <div style="background: var(--bg-surface); padding: 8px 14px; border-radius: 6px; margin-bottom: 12px; border: 1px solid var(--border-color); font-size: 0.78rem; color: var(--kpc-gold-light); display: flex; justify-content: space-between; align-items: center;">
+              <span>🖱️ <strong>3D Controls:</strong> Left-Click + Drag to rotate 360° | Scroll to Zoom | Click any 3D part to inspect</span>
+              <span id="labelCurrent3dPart" style="color: var(--text-main); font-weight: 700;">Selected: Inboard Bearing</span>
             </div>
             
-            <div class="pump-visualizer-container">
-              <svg id="pump3dSvg" width="100%" height="340" viewBox="0 0 700 340">
-                <!-- Pump Base Frame -->
-                <rect x="80" y="260" width="540" height="30" rx="6" fill="#1E293B" stroke="#334155" stroke-width="2"/>
-                <text x="350" y="280" text-anchor="middle" fill="#64748B" font-size="11" font-family="Inter">PS7 Nakuru — Booster Pump Assembly Frame #04</text>
-
-                <!-- Electric Motor Stator Housing -->
-                <g class="pump-part" data-part="motor">
-                  <rect x="100" y="100" width="180" height="150" rx="12" fill="#334155" stroke="#475569" stroke-width="3"/>
-                  <!-- Cooling Fins -->
-                  <path d="M 120,100 V 250 M 140,100 V 250 M 160,100 V 250 M 180,100 V 250 M 200,100 V 250 M 220,100 V 250 M 240,100 V 250" stroke="#1E293B" stroke-width="3"/>
-                  <text x="190" y="180" text-anchor="middle" fill="#F8FAFC" font-size="13" font-weight="700">Electric Motor</text>
-                  <text x="190" y="196" text-anchor="middle" fill="#10B981" font-size="10" font-weight="600">STATE: NOMINAL</text>
-                </g>
-
-                <!-- Drive Shaft -->
-                <rect x="280" y="160" width="100" height="30" fill="#64748B" stroke="#94A3B8" stroke-width="2"/>
-
-                <!-- Deep Groove Roller Bearings (High Risk Component) -->
-                <g class="pump-part selected" data-part="bearing">
-                  <rect x="370" y="130" width="60" height="90" rx="8" fill="rgba(217, 35, 45, 0.25)" stroke="#D9232D" stroke-width="3"/>
-                  <circle cx="400" cy="150" r="8" fill="#D9232D"/>
-                  <circle cx="400" cy="200" r="8" fill="#D9232D"/>
-                  <text x="400" y="118" text-anchor="middle" fill="#D9232D" font-size="11" font-weight="700">Inboard Bearing</text>
-                  <text x="400" y="238" text-anchor="middle" fill="#D9232D" font-size="10" font-weight="600">CRITICAL WEAR</text>
-                </g>
-
-                <!-- Mechanical Face Seal -->
-                <g class="pump-part" data-part="seal">
-                  <rect x="440" y="140" width="40" height="70" rx="4" fill="rgba(245, 158, 11, 0.2)" stroke="#F59E0B" stroke-width="2"/>
-                  <text x="460" y="130" text-anchor="middle" fill="#F59E0B" font-size="10" font-weight="600">Mech Seal</text>
-                </g>
-
-                <!-- Pump Volute Casing & Closed Impeller -->
-                <g class="pump-part" data-part="impeller">
-                  <path d="M 490,100 C 580,100 620,140 620,175 C 620,210 580,250 490,250 Z" fill="#1E293B" stroke="#008751" stroke-width="3"/>
-                  <!-- Impeller Blades -->
-                  <circle cx="545" cy="175" r="30" fill="none" stroke="#008751" stroke-width="3" stroke-dasharray="8 6"/>
-                  <text x="545" y="180" text-anchor="middle" fill="#F8FAFC" font-size="12" font-weight="700">Impeller</text>
-                  <text x="545" y="194" text-anchor="middle" fill="#008751" font-size="10" font-weight="600">NOMINAL</text>
-                </g>
-              </svg>
+            <div id="container3D" style="width: 100%; height: 380px; background: radial-gradient(circle at center, #1E293B 0%, #0B1120 100%); border-radius: 12px; position: relative; overflow: hidden; cursor: grab;">
+              <!-- Three.js Canvas will be mounted here dynamically -->
+              <div id="loading3DText" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--text-muted); font-size: 0.9rem;">Initializing 3D WebGL Model...</div>
             </div>
           </div>
 
@@ -424,27 +388,27 @@
             </div>
             
             <div style="display: flex; flex-direction: column; gap: 14px;">
-              <div style="background: rgba(217,35,45,0.15); border: 1px solid var(--kpc-red); padding: 12px; border-radius: 8px;">
-                <div style="color: var(--kpc-red); font-weight: 700; font-size: 0.9rem;">Diagnostic Status: Impending Bearing Outer-Race Fault</div>
-                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">High thermal rise (86.4 °C) combined with 4.82 mm/s vibration velocity signature at 120 Hz BPFO.</div>
+              <div id="partStatusBanner" style="background: rgba(217,35,45,0.15); border: 1px solid var(--kpc-red); padding: 12px; border-radius: 8px;">
+                <div id="partStatusText" style="color: var(--kpc-red); font-weight: 700; font-size: 0.9rem;">Diagnostic Status: Impending Bearing Outer-Race Fault</div>
+                <div id="partDescText" style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">High thermal rise (86.4 °C) combined with 4.82 mm/s vibration velocity signature at 120 Hz BPFO.</div>
               </div>
 
               <div class="shap-bar-container">
                 <div style="font-size: 0.8rem; color: var(--text-dim); font-weight: 600;">SHAP Feature Attribution Weight:</div>
                 <div class="shap-item">
                   <span class="shap-name">Bearing Temp Drift</span>
-                  <div class="shap-bar-bg"><div class="shap-bar-fill positive" style="width: 48%;"></div></div>
-                  <span class="shap-val">+0.48</span>
+                  <div class="shap-bar-bg"><div class="shap-bar-fill positive" id="shapBar1" style="width: 48%;"></div></div>
+                  <span class="shap-val" id="shapVal1">+0.48</span>
                 </div>
                 <div class="shap-item">
                   <span class="shap-name">Vibration RMS (120Hz)</span>
-                  <div class="shap-bar-bg"><div class="shap-bar-fill positive" style="width: 32%;"></div></div>
-                  <span class="shap-val">+0.32</span>
+                  <div class="shap-bar-bg"><div class="shap-bar-fill positive" id="shapBar2" style="width: 32%;"></div></div>
+                  <span class="shap-val" id="shapVal2">+0.32</span>
                 </div>
                 <div class="shap-item">
                   <span class="shap-name">Flowgard Pressure Res.</span>
-                  <div class="shap-bar-bg"><div class="shap-bar-fill positive" style="width: 14%;"></div></div>
-                  <span class="shap-val">+0.14</span>
+                  <div class="shap-bar-bg"><div class="shap-bar-fill positive" id="shapBar3" style="width: 14%;"></div></div>
+                  <span class="shap-val" id="shapVal3">+0.14</span>
                 </div>
               </div>
 
@@ -459,7 +423,6 @@
       <!-- ========================================== -->
       <section id="view-ml" class="view-panel">
         <div class="grid-2col">
-          <!-- RUL Monte Carlo Dropout Regression Chart -->
           <div class="card">
             <div class="card-header">
               <div class="card-title"><i data-lucide="clock"></i> Remaining Useful Life (RUL) Confidence Bounds</div>
@@ -470,7 +433,6 @@
             </div>
           </div>
 
-          <!-- ML Model Performance & RUL Estimate Box -->
           <div class="card">
             <div class="card-header">
               <div class="card-title"><i data-lucide="target"></i> Model Classification Output</div>
@@ -494,7 +456,6 @@
           </div>
         </div>
 
-        <!-- SHAP Waterfall & Drivers -->
         <div class="card">
           <div class="card-header">
             <div class="card-title"><i data-lucide="layers"></i> SHAP Explainable AI — Global Feature Driver Waterfall</div>
@@ -540,7 +501,6 @@
       <!-- ========================================== -->
       <section id="view-financial" class="view-panel">
         <div class="grid-2col">
-          <!-- Orifice Leak Loss Calculator -->
           <div class="card">
             <div class="card-header">
               <div class="card-title"><i data-lucide="calculator"></i> Standard Orifice Leak Sensitivity Calculator</div>
@@ -579,7 +539,6 @@
             </table>
           </div>
 
-          <!-- ROI & Asymmetry Matrix -->
           <div class="card">
             <div class="card-header">
               <div class="card-title"><i data-lucide="shield-alert"></i> ROI Cost Asymmetry Model</div>
@@ -606,7 +565,6 @@
       <!-- ========================================== -->
       <section id="view-alerts" class="view-panel">
         <div class="grid-2col">
-          <!-- Real-Time Alert Stream -->
           <div class="card">
             <div class="card-header">
               <div class="card-title"><i data-lucide="bell"></i> System Alert & Precursor Notification Feed</div>
@@ -640,7 +598,6 @@
             </div>
           </div>
 
-          <!-- Emergency Command & Isolation Controls -->
           <div class="card">
             <div class="card-header">
               <div class="card-title" style="color: var(--kpc-red);"><i data-lucide="power"></i> Emergency Command Isolation</div>
@@ -673,7 +630,6 @@
         <button class="modal-close" id="modalCloseBtn">&times;</button>
       </div>
       <div id="modalBody" style="font-size: 0.9rem; color: var(--text-muted);">
-        <!-- Modal content loaded dynamically -->
       </div>
       <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
         <button class="btn" id="modalCancelBtn">Close</button>
