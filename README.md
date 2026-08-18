@@ -145,7 +145,3 @@ No complex dependencies, `npm install`, or Node environment required! You can ru
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
-
-<p align="center">
-  <i>Developed with ❤️ by Team NULL_TERMINATORS for Kenya Pipeline Company (KPC) Cohort 2026.</i>
-</p>
