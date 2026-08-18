@@ -139,9 +139,3 @@ No complex dependencies, `npm install`, or Node environment required! You can ru
 - **HCI Standard**: ISO 9241 Ergonomic Control Room Guidelines.
 
 ---
-
-## 📜 License
-
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-
----
